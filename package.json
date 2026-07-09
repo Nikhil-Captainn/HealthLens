@@ -1,0 +1,22 @@
+{
+  "name": "automated_chest_disease_detection",
+  "version": "1.0.0",
+  "description": "AI-driven screening framework utilizing ResNet50 for Tuberculosis and COVID-19 detection.",
+  "main": "script.js",
+  "scripts": {
+    "start": "node script.js",
+    "dev": "nodemon script.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chestai",
+    "resnet50",
+    "medical-ai"
+  ],
+  "author": "Nikhil R., Sheefali R., Yadvi B., Piyush K.",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2",
+    "firebase": "^12.11.0"
+  }
+}

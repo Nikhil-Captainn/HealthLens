@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HealthLens | Book Appointment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="global.css">
+
+    <style>
+        :root {
+            --sidebar-bg: linear-gradient(180deg, #2a7fba 0%, #1e6aa0 100%);
+            --app-bg: #eef2f9;
+            --primary-color: #2a7fba;
+            --text-dark: #2d3748;
+            --text-muted: #64748b;
+            --border-color: #d1d9e6;
+            --card-bg: #ffffff;
+            --danger-color: #ef4444;
+            --hover-bg: #f8fafc;
+            --input-bg: #ffffff;
+            --violet-border: rgba(42, 127, 186, 0.2);
+            --success-color: #10b981;
+            --shadow-pop: 0 6px 20px rgba(0,0,0,0.06);
+        }
+        [data-theme="dark"] {
+            --sidebar-bg: linear-gradient(180deg, #0b0f19 0%, #000000 100%);
+            --app-bg: #0b0f19;
+            --primary-color: #3b82f6;
+            --text-dark: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --card-bg: #1e293b;
+            --danger-color: #f87171;
+            --hover-bg: #1a1a1a;
+            --input-bg: #121212;
+            --violet-border: rgba(59, 130, 246, 0.4);
+            --shadow-pop: 0 6px 20px rgba(0,0,0,0.4);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        body { display: flex; height: 100vh; overflow: hidden; background: var(--app-bg); }
+        .app-container { width: 100%; height: 100vh; display: flex; overflow: hidden; }
+
+        /* SIDEBAR */
+        .sidebar { width: 90px; background: var(--sidebar-bg); display: flex; flex-direction: column; align-items: center; padding: 40px 10px; border-radius: 0 30px 30px 0; z-index: 100; box-shadow: 2px 0 15px rgba(0,0,0,0.1); flex-shrink: 0; transition: width 0.4s cubic-bezier(0.4,0,0.2,1), padding 0.4s, border-radius 0.4s; overflow: hidden; }
+        .sidebar:hover { width: 260px; align-items: flex-start; padding: 40px 20px; border-radius: 0 40px 40px 0; }
+        .logo-img-icon { width: 45px; height: 45px; object-fit: contain; margin-bottom: 50px; display: block; }
+        .logo-img-full { width: 160px; object-fit: contain; margin-bottom: 50px; padding-left: 10px; display: none; }
+        .sidebar:hover .logo-img-icon { display: none; }
+        .sidebar:hover .logo-img-full { display: block; animation: fadeIn 0.4s; }
+        .nav-list { list-style: none; flex-grow: 1; padding: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .sidebar:hover .nav-list { align-items: flex-start; }
+        .nav-item { display: flex; align-items: center; gap: 15px; padding: 14px; margin-bottom: 8px; border-radius: 15px; cursor: pointer; font-size: 14px; opacity: 0.7; transition: 0.3s; color: white; font-weight: 600; width: 50px; justify-content: center; }
+        .sidebar:hover .nav-item { width: 100%; justify-content: flex-start; padding: 14px 20px; }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.2); opacity: 1; font-weight: 700; }
+        .nav-item i { font-size: 20px; flex-shrink: 0; }
+        .nav-text { display: none; white-space: nowrap; opacity: 0; }
+        .sidebar:hover .nav-text { display: block; animation: fadeInText 0.4s forwards; }
+        @keyframes fadeInText { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popUp { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* MAIN */
+        .main-content { flex: 1; display: flex; flex-direction: column; padding: 20px 30px; overflow: hidden; }
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .header-left h2 { font-size: 24px; color: var(--text-dark); font-weight: 800; }
+        .header-right { display: flex; align-items: center; gap: 15px; position: relative; }
+        .icon-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--card-bg); display: flex; justify-content: center; align-items: center; color: var(--text-dark); cursor: pointer; box-shadow: var(--shadow-pop); position: relative; border: 1px solid var(--border-color); }
+        .icon-btn:hover { color: var(--primary-color); background: var(--hover-bg); }
+        .icon-btn.has-notif::after { content: ''; position: absolute; top: 12px; right: 12px; width: 8px; height: 8px; background: var(--danger-color); border-radius: 50%; }
+
+        /* Tour button */
+        .tour-icon-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--card-bg); display: flex; justify-content: center; align-items: center; color: var(--primary-color); cursor: pointer; box-shadow: var(--shadow-pop); position: relative; border: 1px solid var(--border-color); transition: background 0.2s; }
+        .tour-icon-btn:hover { background: var(--hover-bg); }
+        .tour-icon-btn.glow-once { animation: tourGlowOnce 2.8s ease-out 0.8s both; }
+        @keyframes tourGlowOnce {
+            0%   { box-shadow: var(--shadow-pop); }
+            35%  { box-shadow: 0 0 0 7px rgba(42,127,186,0.22), 0 0 22px rgba(42,127,186,0.38); }
+            75%  { box-shadow: 0 0 0 4px rgba(42,127,186,0.1), 0 0 10px rgba(42,127,186,0.15); }
+            100% { box-shadow: var(--shadow-pop); }
+        }
+
+        .user-profile { display: flex; align-items: center; gap: 10px; background: var(--card-bg); padding: 6px 15px 6px 6px; border-radius: 30px; cursor: pointer; border: 1px solid var(--border-color); box-shadow: var(--shadow-pop); transition: 0.3s; }
+        .user-profile:hover { border-color: var(--primary-color); }
+        .user-profile img { width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--app-bg); object-fit: cover; }
+        .user-name { font-size: 13px; font-weight: 700; color: var(--text-dark); }
+        .user-email { font-size: 10px; color: var(--success-color); font-weight: 600; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+
+        /* LOCATION */
+        .location-wrapper { position: relative; }
+        .location-btn { padding: 12px 20px; border-radius: 20px; display: flex; gap: 8px; background: var(--primary-color); color: white; font-weight: 600; font-size: 13px; cursor: pointer; border: none; transition: 0.3s; align-items: center; }
+        .location-btn:hover { background: #1e6aa0; transform: scale(1.02); }
+        .loc-text { max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .loc-dropdown { position: absolute; top: 55px; left: 0; width: 300px; background: var(--card-bg); border-radius: 16px; box-shadow: var(--shadow-pop); border: 1px solid var(--border-color); display: none; flex-direction: column; z-index: 200; overflow: hidden; }
+        .loc-dropdown.show { display: flex; animation: slideIn 0.2s ease; }
+        .loc-current { display: flex; align-items: center; gap: 15px; padding: 15px; cursor: pointer; color: var(--primary-color); transition: 0.2s; }
+        .loc-current:hover { background: var(--hover-bg); }
+        .loc-divider { text-align: center; border-bottom: 1px solid var(--border-color); line-height: 0.1em; margin: 10px 20px; }
+        .loc-divider span { background: var(--card-bg); padding: 0 10px; color: var(--text-muted); font-size: 11px; font-weight: 600; }
+        .loc-search-box { display: flex; align-items: center; margin: 10px 15px; padding: 10px 15px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); }
+        .loc-search-box input { border: none; outline: none; width: 100%; font-size: 13px; background: transparent; color: var(--text-dark); margin-left: 10px; }
+        .loc-results { list-style: none; max-height: 200px; overflow-y: auto; }
+        .loc-results li { padding: 12px 15px; font-size: 13px; color: var(--text-dark); cursor: pointer; display: flex; align-items: flex-start; gap: 10px; border-bottom: 1px solid var(--border-color); transition: 0.2s; }
+        .loc-results li:hover { background: var(--hover-bg); color: var(--primary-color); }
+
+        /* NOTIF */
+        .notif-panel { position: absolute; top: 55px; right: 200px; width: 320px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow-pop); display: none; flex-direction: column; z-index: 100; max-height: 400px; overflow: hidden; }
+        .notif-panel.show { display: flex; animation: slideIn 0.3s ease; }
+        .notif-header { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid var(--border-color); align-items: center; }
+        .notif-header h4 { font-size: 14px; color: var(--text-dark); }
+        .notif-header button { background: none; border: none; color: var(--primary-color); font-size: 12px; cursor: pointer; font-weight: 600; }
+        .notif-list { padding: 10px; overflow-y: auto; flex: 1; }
+        .notif-item { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 13px; color: var(--text-dark); display: flex; flex-direction: column; gap: 5px; border-radius: 8px; background: var(--input-bg); margin-bottom: 8px; }
+        .notif-time { font-size: 10px; color: var(--primary-color); font-weight: 600; }
+        .notif-empty { padding: 30px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+        /* DASHBOARD */
+        .dashboard-container { display: flex; gap: 20px; height: calc(100vh - 100px); transition: all 0.4s ease; }
+        .center-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        .list-header h3 { font-size: 18px; color: var(--text-dark); font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .search-filter { display: flex; gap: 10px; flex-wrap: wrap; }
+        .search-box { display: flex; align-items: center; background: var(--card-bg); padding: 8px 15px; border-radius: 12px; border: 1px solid var(--border-color); width: 220px; box-shadow: var(--shadow-pop); }
+        .search-box input { border: none; outline: none; width: 100%; font-size: 13px; background: transparent; color: var(--text-dark); margin-left: 10px; }
+        .filter-select { padding: 8px 15px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-dark); font-size: 13px; outline: none; cursor: pointer; font-weight: 600; box-shadow: var(--shadow-pop); }
+
+        /* DOCTOR GRID */
+        .doctor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; overflow-y: auto; padding: 5px 5px 20px 5px; }
+        .doctor-grid::-webkit-scrollbar { width: 4px; }
+        .doctor-grid::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .dr-card { background: var(--card-bg); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; border: 1px solid var(--border-color); transition: 0.3s; height: 100%; box-shadow: var(--shadow-pop); }
+        .dr-card:hover { border-color: var(--primary-color); box-shadow: 0 8px 25px rgba(42,127,186,0.15); transform: translateY(-4px); }
+        .dr-card-top { display: flex; gap: 15px; align-items: center; margin-bottom: 15px; }
+        .dr-img { width: 65px; height: 65px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 3px solid var(--text-dark); background: var(--input-bg); }
+        .dr-info { min-width: 0; }
+        .dr-info h4 { font-size: 15px; color: var(--text-dark); margin-bottom: 4px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dr-domain { font-size: 12px; color: var(--primary-color); font-weight: 600; display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
+        .dr-hospital { font-size: 11px; color: var(--text-muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .dr-card-actions { display: flex; gap: 10px; margin-top: auto; }
+        .btn-book { flex: 1; background: var(--primary-color); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .btn-book:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-detail { flex: 1; background: transparent; color: var(--text-dark); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .btn-detail:hover { background: var(--hover-bg); border-color: var(--primary-color); }
+        .dr-card.selected-card { border-color: var(--primary-color); box-shadow: 0 8px 25px rgba(42,127,186,0.2); transform: translateY(-2px); }
+        .btn-selected { background-color: var(--success-color) !important; box-shadow: 0 4px 10px rgba(16,185,129,0.3); }
+
+        /* LEFT PANEL */
+        .left-panel { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; padding-right: 5px; }
+        .left-panel::-webkit-scrollbar { width: 4px; }
+        .left-panel::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .booking-header h3 { font-size: 18px; color: var(--text-dark); margin-bottom: 10px; font-weight: 800; }
+        .step-label { font-size: 13px; font-weight: 800; color: var(--text-dark); margin: 15px 0 10px 0; display: flex; align-items: center; gap: 8px; }
+        .step-label span { background: var(--primary-color); color: white; width: 20px; height: 20px; display: inline-flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 11px; }
+
+        /* CALENDAR */
+        .calendar-section { background: var(--card-bg); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--shadow-pop); }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; color: var(--text-dark); font-weight: 800; font-size: 15px; }
+        .cal-arrow { background: var(--card-bg); border: 1px solid var(--border-color); width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--text-muted); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .cal-arrow:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); transform: scale(1.15) translateY(-2px); box-shadow: 0 5px 12px rgba(42,127,186,0.3); }
+        .calendar-table { width: 100%; border-collapse: separate; border-spacing: 4px; text-align: center; table-layout: fixed; }
+        .calendar-table th { font-size: 12px; color: var(--text-muted); font-weight: 600; padding-bottom: 5px; }
+        .calendar-table td { font-size: 13px; height: 35px; color: var(--text-dark); cursor: pointer; position: relative; border-radius: 8px; vertical-align: middle; transition: 0.2s; }
+        .calendar-table td:hover:not(.empty) { background: var(--hover-bg); transform: scale(1.1); }
+        .calendar-table .sunday { color: var(--danger-color); font-weight: bold; }
+        .calendar-table td.active-date { background: var(--primary-color); color: white !important; font-weight: bold; box-shadow: 0 4px 10px rgba(42,127,186,0.3); }
+        .calendar-table td.has-booking::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: var(--danger-color); border-radius: 50%; }
+
+        /* SLOTS */
+        .slots-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .slot-btn { padding: 12px 10px; border: 1px solid var(--border-color); background: var(--card-bg); border-radius: 10px; color: var(--text-dark); font-size: 12px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .slot-btn:hover:not(.booked) { border-color: var(--primary-color); color: var(--primary-color); }
+        .slot-btn.selected-slot { background: var(--primary-color); color: white; border-color: var(--primary-color); box-shadow: 0 4px 12px rgba(42,127,186,0.3); }
+        .slot-btn.booked { opacity: 0.6; cursor: not-allowed; background: var(--hover-bg); text-decoration: line-through; border-color: var(--danger-color); color: var(--text-muted); }
+        .patient-concerns textarea { width: 100%; height: 100px; padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); resize: none; font-size: 13px; color: var(--text-dark); background: var(--input-bg); outline: none; font-family: inherit; }
+        .patient-concerns textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(42,127,186,0.1); }
+
+        /* RIGHT PANEL */
+        .right-panel { width: 0; opacity: 0; visibility: hidden; background: var(--card-bg); border-radius: 24px; padding: 0; display: flex; flex-direction: column; border: 1px solid transparent; transition: all 0.4s cubic-bezier(0.4,0,0.2,1); overflow: hidden; }
+        .dashboard-container.show-details .right-panel { width: 420px; opacity: 1; visibility: visible; padding: 25px; border-color: var(--border-color); flex-shrink: 0; }
+        .detail-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .detail-header-top h3 { font-size: 18px; color: var(--text-dark); font-weight: 800; }
+        .close-btn { background: var(--input-bg); border: 1px solid var(--border-color); width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
+        .close-btn:hover { color: var(--danger-color); border-color: var(--danger-color); }
+        .detail-content { overflow-y: auto; padding-right: 5px; }
+        .detail-content::-webkit-scrollbar { width: 3px; }
+        .detail-content::-webkit-scrollbar-thumb { background: var(--border-color); }
+        .detail-main-img { width: 100%; height: 220px; border-radius: 16px; object-fit: cover; margin-bottom: 15px; border: 1px solid var(--border-color); }
+        .detail-name { font-size: 22px; color: var(--text-dark); margin-bottom: 8px; font-weight: 800; }
+        .detail-meta { display: flex; flex-direction: column; gap: 8px; margin-bottom: 25px; font-size: 13px; color: var(--text-muted); font-weight: 500; }
+        .detail-meta span i { color: var(--primary-color); margin-right: 8px; width: 16px; }
+        .detail-section { margin-bottom: 25px; }
+        .detail-section h4 { font-size: 14px; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-dark); font-weight: 700; }
+        .detail-section p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+        .speciality-list { list-style: none; margin-left: 5px; }
+        .speciality-list li { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; position: relative; padding-left: 15px; font-weight: 500; }
+        .speciality-list li::before { content: '•'; position: absolute; left: 0; color: var(--primary-color); font-size: 16px; line-height: 12px; }
+        .map-container { position: relative; width: 100%; height: 180px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s; margin-top: 5px; }
+        .map-container:hover { border-color: var(--primary-color); box-shadow: 0 4px 15px rgba(42,127,186,0.25); }
+        .map-overlay { position: absolute; bottom: 12px; right: 12px; pointer-events: none; }
+        .btn-directions { background: var(--primary-color); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .reviews-box { border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; background: var(--input-bg); }
+        .stars { color: #f59e0b; font-size: 12px; margin-bottom: 10px; }
+        .reviews-box p { font-style: italic; font-size: 13px; color: var(--text-dark); line-height: 1.5; }
+        .detail-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .detail-actions .btn-call { flex: 1; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .detail-actions .btn-call:hover { background: #2563eb; }
+        .detail-actions .btn-chat { flex: 1; padding: 14px; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .detail-actions .btn-chat:hover { background: #059669; }
+
+        /* TOAST */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .modern-toast { background: var(--card-bg); color: var(--text-dark); padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 14px; border-left: 4px solid var(--primary-color); transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275); border: 1px solid var(--border-color); }
+        .modern-toast.show { transform: translateX(0); }
+        .modern-toast.success { border-left-color: var(--success-color); }
+        .modern-toast.danger { border-left-color: var(--danger-color); }
+
+        /* ═══════════════════════════════════════════════
+           TOUR GUIDE — PROFESSIONAL & FULLY AUTOMATED
+           ═══════════════════════════════════════════════ */
+        .tour-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 10000; display: none; backdrop-filter: blur(2px); }
+        .tour-overlay.active { display: block; animation: fadeIn 0.3s; }
+
+        #tourRing {
+            position: fixed; z-index: 10002; pointer-events: none;
+            border: 2.5px solid var(--primary-color);
+            border-radius: 12px;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.72), 0 0 28px rgba(42,127,186,0.55);
+            transition: left 0.38s ease, top 0.38s ease, width 0.38s ease, height 0.38s ease, border-radius 0.38s ease;
+            display: none;
+        }
+        #tourRing.active { display: block; }
+
+        #ghostCursor {
+            position: fixed; z-index: 10006; pointer-events: none;
+            display: none;
+            width: 22px; height: 22px;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            background: rgba(42,127,186,0.18);
+            transform: translate(-50%, -50%);
+            transition: left 0.48s cubic-bezier(0.4,0,0.2,1), top 0.48s cubic-bezier(0.4,0,0.2,1);
+            box-shadow: 0 0 12px rgba(42,127,186,0.4);
+        }
+        #ghostCursor::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 7px; height: 7px; background: var(--primary-color); border-radius: 50%; }
+        #ghostCursor.clicking { transform: translate(-50%,-50%) scale(0.6); background: rgba(16,185,129,0.3); border-color: var(--success-color); box-shadow: 0 0 16px rgba(16,185,129,0.5); }
+        #ghostCursor.clicking::after { background: var(--success-color); }
+
+        #tourPanel {
+            position: fixed; z-index: 10005;
+            background: var(--card-bg);
+            border: 1.5px solid rgba(42,127,186,0.38);
+            border-radius: 18px;
+            width: 330px; max-width: calc(100vw - 24px);
+            box-shadow: 0 18px 55px rgba(0,0,0,0.32);
+            display: none; overflow: hidden;
+        }
+        #tourPanel.active { display: block; animation: popUp 0.3s cubic-bezier(0.175,0.885,0.32,1.275); }
+
+        .tp-header { background: linear-gradient(135deg, var(--primary-color) 0%, #1a5f9e 100%); padding: 14px 17px 12px; display: flex; align-items: center; gap: 11px; }
+        .tp-icon { width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; color: white; flex-shrink: 0; }
+        .tp-title { font-size: 14px; font-weight: 800; color: white; line-height: 1.2; }
+        .tp-step { font-size: 11px; color: rgba(255,255,255,0.72); font-weight: 600; margin-top: 2px; }
+
+        .tp-body { padding: 15px 17px 13px; }
+        .tp-action-row { display: none; align-items: center; gap: 8px; background: rgba(42,127,186,0.07); border: 1px solid rgba(42,127,186,0.16); border-radius: 9px; padding: 8px 11px; font-size: 12px; font-weight: 700; color: var(--primary-color); margin-bottom: 12px; }
+        .tp-action-row.show { display: flex; }
+        .tp-action-row i { font-size: 12px; }
+        .tp-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; font-weight: 500; }
+
+        .tp-footer { display: flex; justify-content: space-between; align-items: center; padding: 11px 17px 13px; border-top: 1px solid var(--border-color); }
+        .tp-skip { background: none; border: none; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; padding: 6px 8px; border-radius: 7px; }
+        .tp-skip:hover { color: var(--danger-color); }
+        .tp-next { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 4px 12px rgba(42,127,186,0.28); transition: 0.2s; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; }
+        .tp-next:hover { transform: translateY(-1px); }
+        .tp-next.done { background: var(--success-color); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+
+        #celebrationModal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); z-index: 20000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        #celebrationModal.active { display: flex; animation: fadeIn 0.4s ease; }
+        .celeb-card { background: var(--card-bg); padding: 40px; border-radius: 24px; text-align: center; max-width: 440px; width: calc(100vw - 40px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border: 1px solid rgba(42,127,186,0.2); animation: popUp 0.5s cubic-bezier(0.175,0.885,0.32,1.275); }
+        .celeb-card i { font-size: 64px; color: var(--success-color); margin-bottom: 20px; display: block; filter: drop-shadow(0 10px 15px rgba(16,185,129,0.3)); }
+        .celeb-card h2 { font-size: 28px; color: var(--text-dark); margin-bottom: 12px; font-weight: 800; letter-spacing: -0.5px; }
+        .celeb-card p { font-size: 15px; color: var(--text-muted); margin-bottom: 30px; line-height: 1.6; }
+        .celeb-start-btn { width: 100%; padding: 16px; font-size: 16px; font-weight: 800; border-radius: 14px; background: linear-gradient(135deg, var(--primary-color), #1e6aa0); color: white; border: none; cursor: pointer; box-shadow: 0 10px 25px rgba(42,127,186,0.35); transition: all 0.3s ease; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .celeb-start-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(42,127,186,0.45); }
+
+        /* MOBILE */
+        @media (max-width: 968px) {
+            body { flex-direction: column; }
+            .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; background: var(--card-bg); border-top: 1px solid var(--border-color); flex-direction: row; padding: 0; border-radius: 20px 20px 0 0; z-index: 9999; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
+            .sidebar-header, .nav-item[onclick*="logoutUser"] { display: none; }
+            .nav-list { display: flex; flex-direction: row; justify-content: space-evenly; align-items: center; width: 100%; }
+            .nav-item { flex-direction: column; gap: 4px; padding: 8px; margin: 0; width: 65px; background: transparent !important; color: var(--text-muted); }
+            .nav-item i { font-size: 22px; }
+            .nav-text { font-size: 0.65rem; font-weight: 600; display: block; }
+            .nav-item.active { color: var(--primary-color) !important; }
+            .nav-item.active i { transform: translateY(-3px); }
+            .main-content { padding: 15px; padding-bottom: 100px; overflow-x: hidden; width: 100vw; box-sizing: border-box; }
+            .dashboard-container { flex-direction: column; height: auto; gap: 15px; }
+            .top-header { flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
+            .header-left { display: none; }
+            .header-right { width: 100%; justify-content: space-between; gap: 10px; }
+            .user-profile { order: -1; max-width: 140px; padding: 4px 10px; }
+            .user-profile img { width: 28px; height: 28px; }
+            .user-name { font-size: 0.75rem; }
+            .icon-btn, .tour-icon-btn { width: 35px; height: 35px; }
+            .location-btn { width: 100%; justify-content: center; padding: 12px; border-radius: 12px; margin-bottom: 5px; }
+            .doctor-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; padding-right: 0; }
+            .dr-card { padding: 12px; align-items: center; text-align: center; border-radius: 12px; }
+            .dr-card-top { flex-direction: column; gap: 8px; margin-bottom: 10px; width: 100%; }
+            .dr-img { width: 55px; height: 55px; }
+            .dr-info { width: 100%; }
+            .dr-info h4 { font-size: 0.85rem; white-space: normal; }
+            .dr-domain { justify-content: center; font-size: 0.65rem; }
+            .dr-hospital { font-size: 0.65rem; white-space: normal; }
+            .dr-card-actions { flex-direction: column; width: 100%; gap: 6px; }
+            .btn-book, .btn-detail { padding: 8px; font-size: 0.75rem; border-radius: 8px; }
+            .left-panel { width: 100%; overflow: visible; padding-right: 0; order: 2; }
+            .center-panel { width: 100%; overflow: visible; order: 1; }
+            .right-panel { display: none; }
+            .dashboard-container.show-details .right-panel { display: flex; width: 100%; position: fixed; inset: 0; z-index: 10000; border-radius: 0; padding: 20px; overflow-y: auto; padding-bottom: 100px; }
+        }
+        @media (max-width: 360px) { .doctor-grid { grid-template-columns: 1fr !important; } }
+    </style>
+</head>
+<body id="app-root" data-theme="light">
+
+<script>window.onerror=function(m,u,l){console.error("Error:",m,"at line",l);};</script>
+
+<div class="toast-container" id="toastContainer"></div>
+<div id="ghostCursor"></div>
+<div id="tourRing"></div>
+<div id="tourOverlay" class="tour-overlay"></div>
+
+<div id="tourPanel">
+    <div class="tp-header">
+        <div class="tp-icon" id="tpIcon"><i class="fas fa-compass"></i></div>
+        <div>
+            <div class="tp-title" id="tpTitle">Welcome</div>
+            <div class="tp-step" id="tpStep">Step 1 of 21</div>
+        </div>
+    </div>
+    <div class="tp-body">
+        <div class="tp-action-row" id="tpActionRow"><i class="fas fa-hand-pointer"></i><span id="tpActionText"></span></div>
+        <p class="tp-desc" id="tpDesc"></p>
+    </div>
+    <div class="tp-footer">
+        <button class="tp-skip" onclick="skipTour()">✕ Skip Tour</button>
+        <button class="tp-next" id="tpNext" onclick="nextTourStep()">Next <i class="fas fa-chevron-right"></i></button>
+    </div>
+</div>
+
+<div id="celebrationModal">
+    <div class="celeb-card">
+        <i class="fas fa-check-circle"></i>
+        <h2>You're All Set!</h2>
+        <p>You've seen the full portal in action — from browsing doctors to calling, chatting on WhatsApp, getting directions, and confirming a booking. You're ready!</p>
+        <button class="celeb-start-btn" onclick="closeCelebration()"><i class="fas fa-play" style="margin-right:8px;"></i>Start Using Portal</button>
+    </div>
+</div>
+
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="assets/logo_health_lens_transparent_only_logo.png" alt="HealthLens" class="logo-img-icon" onerror="this.style.display='none'">
+            <img src="assets/logo_health_lens_transparent_both_text_and_logo.png" alt="HealthLens" class="logo-img-full" onerror="this.style.display='none'">
+        </div>
+        <ul class="nav-list">
+            <li class="nav-item" onclick="location.href='dashboard.html'"><i class="fas fa-th-large"></i><span class="nav-text">Dashboard</span></li>
+            <li class="nav-item active"><i class="fas fa-calendar-plus"></i><span class="nav-text">Schedule</span></li>
+            <li class="nav-item" onclick="location.href='report.html'"><i class="fas fa-file-medical-alt"></i><span class="nav-text">Archive</span></li>
+            <li class="nav-item" onclick="location.href='profile.html'"><i class="fas fa-user"></i><span class="nav-text">Profile</span></li>
+            <li class="nav-item" onclick="location.href='setting.html'"><i class="fas fa-cog"></i><span class="nav-text">Settings</span></li>
+            <li class="nav-item" onclick="logoutUser()" style="color:#ffb3b3;margin-top:auto;display:flex;"><i class="fas fa-sign-out-alt"></i><span class="nav-text">Sign Out</span></li>
+        </ul>
+    </aside>
+
+    <main class="main-content" id="mainScrollArea">
+        <div class="top-header">
+            <div class="header-left" id="ts-1"><h2>Find Specialist</h2></div>
+            <div class="header-right">
+                <div class="location-wrapper">
+                    <button class="location-btn" id="ts-5" onclick="toggleLocationMenu()">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="loc-text" id="locationText">Location</span>
+                        <i class="fas fa-chevron-down" style="font-size:12px;margin-left:5px;"></i>
+                    </button>
+                    <div class="loc-dropdown" id="locDropdown">
+                        <div class="loc-current" onclick="useCurrentLocation()">
+                            <i class="fas fa-crosshairs"></i>
+                            <div><h4>Detect current location</h4><p>Using GPS</p></div>
+                        </div>
+                        <div class="loc-divider"><span>OR SEARCH</span></div>
+                        <div class="loc-search-box"><i class="fas fa-search"></i><input type="text" id="locSearchInput" placeholder="Search area or city..."></div>
+                        <ul class="loc-results" id="locResults"></ul>
+                    </div>
+                </div>
+                <button class="icon-btn" onclick="toggleGlobalTheme()" id="ts-2" title="Toggle Theme"><i class="fas fa-moon" id="themeIconBtn"></i></button>
+                <button class="tour-icon-btn" id="tourTriggerBtn" onclick="handleTourBtn()" title="Guided Tour"><i class="fas fa-compass"></i></button>
+                <button class="icon-btn" id="ts-3" title="Notifications"><i class="fas fa-bell"></i></button>
+                <div class="user-profile" id="ts-4" onclick="location.href='profile.html'">
+                    <img id="user-avatar" src="https://api.dicebear.com/7.x/lorelei/svg?seed=User" alt="User">
+                    <div class="user-info">
+                        <span class="user-name" id="user-name-display">Loading...</span>
+                        <span class="user-email" id="user-email-display"><i class="fas fa-check-circle"></i> Verified</span>
+                    </div>
+                </div>
+                <div class="notif-panel" id="notifPanel">
+                    <div class="notif-header"><h4>Notifications</h4><button onclick="clearNotifications()">Clear All</button></div>
+                    <div class="notif-list" id="notifList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-container" id="dashboard">
+            <div class="center-panel" id="ts-8">
+                <div class="list-header">
+                    <h3><i class="fas fa-user-md" style="color:var(--primary-color);"></i> Select Specialist</h3>
+                    <div class="search-filter">
+                        <div class="search-box" id="ts-6"><i class="fas fa-search"></i><input type="text" id="searchDoctor" placeholder="Search doctors, hospitals..."></div>
+                        <select class="filter-select" id="ts-7"><option value="All">All Specialities</option></select>
+                    </div>
+                </div>
+                <div class="doctor-grid" id="doctorGrid"></div>
+            </div>
+
+            <div class="left-panel">
+                <div class="booking-header"><h3 id="wizardDocName"><i class="fas fa-calendar-alt" style="color:var(--primary-color);"></i> Schedule</h3></div>
+                <div class="step-label"><span>2</span> Select Date</div>
+                <div class="calendar-section" id="ts-19">
+                    <div class="cal-header">
+                        <button id="prevMonth" class="cal-arrow"><i class="fas fa-chevron-left"></i></button>
+                        <h4 id="monthYearDisplay">Month Year</h4>
+                        <button id="nextMonth" class="cal-arrow"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <table class="calendar-table">
+                        <thead><tr><th class="sunday">Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>
+                        <tbody id="calendarBody"></tbody>
+                    </table>
+                </div>
+                <div class="step-label"><span>3</span> Select Time</div>
+                <div id="ts-21">
+                    <p id="selectedDateDisplay" style="font-size:11px;color:var(--primary-color);font-weight:700;margin-bottom:10px;"></p>
+                    <div class="slots-grid" id="timeSlotsContainer"></div>
+                </div>
+                <div class="patient-concerns" style="margin-top:15px;">
+                    <textarea id="patientNotes" placeholder="Briefly describe your symptoms or reason for visit..."></textarea>
+                </div>
+                <button id="mainConfirmBtn" class="btn-book btn-selected" style="display:none;width:100%;padding:15px;font-size:15px;margin-top:15px;box-shadow:0 8px 20px rgba(16,185,129,0.3);" onclick="executeBooking()">
+                    <i class="fas fa-check-circle" style="margin-right:5px;"></i> CONFIRM APPOINTMENT
+                </button>
+            </div>
+
+            <div class="right-panel" id="detailPanel">
+                <div class="detail-header-top">
+                    <h3>Profile</h3>
+                    <button class="close-btn" id="closeDetail"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="detail-content" id="detailContent"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="global.js"></script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    const app = initializeApp({ apiKey:"AIzaSyA90dg3eiX0aSqDATaU2ZdR-G10-elrva0", authDomain:"healthlens-5b6d9.firebaseapp.com", projectId:"healthlens-5b6d9", storageBucket:"healthlens-5b6d9.firebasestorage.app", messagingSenderId:"43708270749", appId:"1:43708270749:web:4d2f1b476dbc159f426c74" });
+    const auth = getAuth(app);
+    window.logoutUser = function(){ signOut(auth).then(()=>{ ['healthlens_logged_in','activeClinician','healthlens_role','healthlens_user_avatar'].forEach(k=>localStorage.removeItem(k)); window.location.href='index.html'; }); };
+</script>
+
+<script>
+/* ─── TOAST ─────────────────────────────────────────────── */
+const toastSound = new Audio('https://actions.google.com/sounds/v1/ui/message_notification.ogg');
+window.showToast = function(msg, type='success'){
+    const box=document.getElementById('toastContainer'); if(!box) return;
+    toastSound.currentTime=0; toastSound.play().catch(()=>{});
+    const t=document.createElement('div'); t.className=`modern-toast ${type}`;
+    t.innerHTML=(type==='success'?'<i class="fas fa-check-circle"></i>':'<i class="fas fa-exclamation-circle"></i>')+' '+msg;
+    box.appendChild(t); setTimeout(()=>t.classList.add('show'),10);
+    setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),400); },3000);
+};
+
+/* ─── USER / KEYS ────────────────────────────────────────── */
+const activeUser  = localStorage.getItem('activeClinician')||'Guest';
+const isGuest     = activeUser==='Guest'||localStorage.getItem('healthlens_logged_in')!=='true';
+const bookingKey  = `doctorBookings_${activeUser}`;
+const notifKey    = `myNotifications_${activeUser}`;
+const profileKey  = `profileData_${activeUser}`;
+const tourDoneKey = `healthlens_tour_done_${activeUser}`;
+let bookings      = JSON.parse(localStorage.getItem(bookingKey))||{};
+let notifications = JSON.parse(localStorage.getItem(notifKey))||[];
+
+/* ─── DOCTOR DATA ────────────────────────────────────────── */
+const allDoctors=[
+    {id:1,name:"Dr. Nitin Mankar",lat:21.1234,lng:79.0412,phone:"08511490966",domain:"General Physician",hospital:"Apna Physio Clinic",image:"https://content.jdmagicbox.com/v2/comp/nagpur/g7/0712px712.x712.240601190855.t8g7/catalogue/apna-physio-general-physician-and-physiotherapy-clinic-dattawadi-nagpur-clinics-nl7eo6hfqe.jpg",experience:"9 Years in Healthcare. Consultation Fees: ₹ 100",specialities:["General Checkups","Physiotherapy"],rating:4.7,reviewText:"Very affordable and great care."},
+    {id:2,name:"Dr. Neha Goenka Agrawal",lat:21.1350,lng:79.0700,phone:"07041766972",domain:"General Physician",hospital:"Panchwati Tower Clinic",image:"https://content.jdmagicbox.com/v2/comp/nagpur/p6/0712px712.x712.230909223010.b9p6/catalogue/dr-neha-goenka-agrawal-dhantoli-nagpur-general-physician-doctors-m2a0i0wemt.jpg",experience:"12 Years in Healthcare",specialities:["Internal Medicine","Fever"],rating:4.5,reviewText:"Listens patiently and prescribes minimal medicines."},
+    {id:3,name:"Dr. Pallavi Patle",lat:21.1120,lng:79.0205,phone:"08147630884",domain:"Gynaecologist",hospital:"Jaitala Clinic",image:"https://ui-avatars.com/api/?name=Dr+Pallavi+Patle&background=random",experience:"2 Years in Healthcare",specialities:["Obstetrics","Gynaecology"],rating:5.0,reviewText:"Very friendly and approachable."},
+    {id:4,name:"Dr. Husain Bhati",lat:21.1458,lng:79.0882,phone:"919876543211",domain:"Neurosurgeon",hospital:"Spine And Brain Surgeon",image:"assets/dr-husain-bhati-spine-and-brain-surgeon-neurosurgeon-nagpur-neurologists-i6vgs4b3j6.webp",experience:"18 Years in Healthcare. Fees: ₹ 500",specialities:["Spine Surgery","Neurosurgical Interventions"],rating:4.5,reviewText:"Highly skilled neurosurgeon."},
+    {id:5,name:"Dr. Nitin Shinde",lat:21.1850,lng:79.0800,phone:"919876543212",domain:"General Physician",hospital:"Alexis Multispeciality Hospital",image:"assets/dr-nitin-shinde-alexis-multispeciality-hospital-pvt-ltd-mankapur-nagpur-general-physician-doctors-h43pd9pjuz.jpg",experience:"Fees: ₹ 750",specialities:["Internal Medicine"],rating:4.7,reviewText:"Great facility and accurate diagnosis."},
+    {id:6,name:"Dr. Sehba Nehal",lat:21.1845,lng:79.0790,phone:"919876543213",domain:"General Physician",hospital:"Max Super Speciality Hospital",image:"assets/dr-sehba-asim-alexis-multispeciality-hospital-pvt-ltd-mankapur-nagpur-general-physician-doctors-0gh1xh2wgr.jpg",experience:"Internal Medicine Expert. Fees: ₹ 750",specialities:["Internal Medicine"],rating:4.0,reviewText:"Detailed analysis of symptoms."},
+    {id:7,name:"Dr. Siddharth Mendiratta",lat:21.1860,lng:79.0810,phone:"919876543214",domain:"General Surgeon",hospital:"Alexis Multispeciality Hospital",image:"assets/dr-siddharth-mendiratta-alexis-multispeciality-hospital-pvt-ltd-mankapur-nagpur-general-surgeon-doctors-n660v18ng4.jpg",experience:"MCh Plastic Surgery. Fees: ₹ 1,000",specialities:["General Surgery","Plastic Surgery"],rating:4.9,reviewText:"Exceptional surgical precision."},
+    {id:8,name:"Dr. Shivangi Sahewala",lat:21.1380,lng:79.0680,phone:"08511938977",domain:"Gynaecologist",hospital:"Ramdas Peth Clinic",image:"assets/dr-shivangi-sahewala-mutha-ramdas-peth-nagpur-gynaecologist-and-obstetrician-doctors-1s1qahmspe.jpg",experience:"11 Years. Fees: ₹ 1,000",specialities:["Laparoscopy","Obstetrics"],rating:4.4,reviewText:"Accomplished laparoscopic surgeon."},
+    {id:9,name:"Dr. Palak Jaiswal",lat:21.1550,lng:79.0850,phone:"07411716877",domain:"Neurosurgeon",hospital:"Kasturchand Park Clinic",image:"assets/dr-palak-jaiswal-kasturchand-park-nagpur-neurologists-7keri7clkr.jpg",experience:"15 Years. Fees: ₹ 1,000",specialities:["Brain Tumors","Spinal Tumors"],rating:4.9,reviewText:"Saved my life, brilliant doctor."},
+    {id:10,name:"Dr. Sameeksha Dubey",lat:21.1500,lng:79.0820,phone:"919876543215",domain:"Oncologist",hospital:"Kingsway Hospital",image:"assets/dr-sameeksha-dubey-kasturchand-park-nagpur-oncologists-h7bgngbx93.jpg",experience:"Expert in Internal Medicine & Oncology.",specialities:["Oncology","Chemotherapy"],rating:4.9,reviewText:"Compassionate cancer care."},
+    {id:11,name:"Dr. Kirti Kewalramani",lat:21.1900,lng:79.0950,phone:"919876543216",domain:"Gynaecologist",hospital:"Jaripatka Clinic",image:"assets/dr-kewalramani-kirti-jaripatka-nagpur-gynaecologist-and-obstetrician-doctors-y1r4todpps.jpg",experience:"22 Years in Healthcare",specialities:["Women's Wellness"],rating:4.5,reviewText:"Highly experienced and kind."},
+    {id:12,name:"Dr. K G Deshpande",lat:21.1420,lng:79.0550,phone:"07383171845",domain:"Cardiologist",hospital:"Memorial Center",image:"assets/dr-k-g-deshpande-memorial-center-gokulpeth-nagpur-cardiologists-0onl39yzsn.jpg",experience:"42 Years in Healthcare",specialities:["Cardiac Treatment"],rating:4.3,reviewText:"Pioneer in cardiology in Nagpur."},
+    {id:13,name:"Dr. Chetan Rathi",lat:21.1390,lng:79.0650,phone:"919876543217",domain:"Cardiologist",hospital:"Hrudayam Heart Care",image:"assets/dr-chetan-rathi-hrudayam-heart-care-and-arrhythmia-clinic-ramdas-peth-nagpur-cardiac-hospitals-0einphz3wi.jpeg",experience:"14 Years in Healthcare",specialities:["Electrophysiology"],rating:4.9,reviewText:"Respected consultant cardiologist."},
+    {id:14,name:"Dr. Shoeb Nadeem",lat:21.1855,lng:79.0805,phone:"919876543218",domain:"Cardiologist",hospital:"Alexis Multispeciality",image:"assets/dr-shoeb-nadeem-mankapur-nagpur-cardiologists-txl04hfzlz.jpg",experience:"13 Years in Healthcare",specialities:["Interventional Cardiology"],rating:4.5,reviewText:"Great multi-organ transplant care."},
+    {id:15,name:"Dr. Pushkraj Gadkari",lat:21.1865,lng:79.0815,phone:"919876543219",domain:"Cardiologist",hospital:"Alexis Multispeciality",image:"assets/dr-pushkraj-gadkari-alexis-multispeciality-hospital-pvt-ltd-mankapur-nagpur-cardiologists-hljsygh2ir.jpg",experience:"Fees: ₹ 1,000",specialities:["Interventional Cardiology"],rating:5.0,reviewText:"Expert care in transplants."},
+    {id:16,name:"Dr. Prashant Rahate",lat:21.1250,lng:79.1150,phone:"07947203034",domain:"General Surgeon",hospital:"Sevenstar Hospital",image:"assets/dr-prashant-rahate-nandanvan-colony-nagpur-hospitals-4q2cxpce4l.jpg",experience:"Expert Surgeon at Sevenstar",specialities:["General Surgery"],rating:3.9,reviewText:"Good facilities."},
+    {id:17,name:"Dr. Zoeb Haider",lat:21.1255,lng:79.1155,phone:"919876543220",domain:"General Surgeon",hospital:"Sevenstar Hospital",image:"assets/dr-zoeb-haider-sevenstar-hospital-nandanvan-colony-nagpur-general-surgeon-doctors-9lu2j9kcq6.jpg",experience:"Advanced imaging & robotic surgery.",specialities:["Robotic Surgery"],rating:4.3,reviewText:"Holistic patient care."},
+    {id:18,name:"Dr. Sadashiv Bhole",lat:21.1260,lng:79.1160,phone:"919876543221",domain:"Urologist",hospital:"Seven Star Hospital",image:"assets/dr-sadashiv-bhole-seven-star-hospital-nandanvan-colony-nagpur-urologist-doctors-9eystpdrkh.jpg",experience:"26 Years. Fees: ₹ 400",specialities:["Urology","Gen. Surgery"],rating:4.3,reviewText:"Very affordable and effective."},
+    {id:19,name:"Dr. Ravi Dashputra",lat:21.1265,lng:79.1165,phone:"919876543222",domain:"Orthopaedic",hospital:"Sevenstar Hospital",image:"assets/dr-ravi-dashputra-sevenstar-hospital-nandanvan-colony-nagpur-orthopaedic-doctors-tmsybo178q.jpg",experience:"Orthopedist at Sevenstar",specialities:["Orthopaedics","Joint Pain"],rating:4.0,reviewText:"Helped with my knee issues."},
+    {id:20,name:"Dr. Sachin Makade",lat:21.1270,lng:79.1170,phone:"919876543223",domain:"Anesthesiologist",hospital:"Sevenstar Hospital",image:"assets/dr-sachin-makade-nandanvan-colony-nagpur-1km01.jpg",experience:"Neuro Anesthesiologist",specialities:["Anaesthesia"],rating:4.0,reviewText:"Ensured a painless procedure."},
+    {id:21,name:"Dr. Shailesh Kothalkar",lat:21.1275,lng:79.1175,phone:"919876543224",domain:"Rhinoplasty/ENT",hospital:"Sevenstar Hospital",image:"assets/dr-shailesh-kothalkar-sevenstar-hospital-nandanvan-colony-nagpur-rhinoplasty-doctors-f9ogwyrlk3.jpg",experience:"Cochlear Implant Surgeon",specialities:["ENT","Rhinoplasty"],rating:5.0,reviewText:"Best ENT specialist in town."},
+    {id:22,name:"Dr. Rhishikesh Umalkar",lat:21.1400,lng:79.0800,phone:"919876543225",domain:"Cardiologist",hospital:"Manomay Cardiac Care",image:"assets/dr-rhishikesh-umalkar-nagpur-jnn6tuvxmg.jpg",experience:"9 Years. Fees: ₹ 800",specialities:["Echocardiography","Angioplasty"],rating:4.9,reviewText:"Compassionate interventional cardiologist."},
+    {id:23,name:"Dr. Tejas",lat:21.1860,lng:79.0815,phone:"07947425648",domain:"Orthodental",hospital:"Asha Dental Clinic",image:"https://ui-avatars.com/api/?name=Dr+Tejas&background=2563eb&color=fff",experience:"Operating 10:00 am - 2:00 pm | 5:00 pm - 9:00 pm.",specialities:["Bone Grafting","Laser Whitening","Teeth Reshaping"],rating:4.9,reviewText:"Trusted healthcare provider."}
+];
+
+let currentDoctors=[ ...allDoctors];
+let currentDate=new Date(), activeSelectedDate=new Date();
+let selectedTimeSlot=null, activeDoctorId=null;
+const timeSlots=["08:00 AM","09:00 AM","10:00 AM","11:00 AM","12:30 PM","01:30 PM","02:30 PM","03:30 PM","04:30 PM","05:30 PM"];
+
+/* ─── PROFILE ────────────────────────────────────────────── */
+function loadUserProfile(){
+    const p=JSON.parse(localStorage.getItem(profileKey))||{};
+    const av=localStorage.getItem('healthlens_user_avatar');
+    document.getElementById('user-name-display').innerText=p.name||(((p.first||'')+' '+(p.last||'')).trim())||activeUser;
+    document.getElementById('user-email-display').innerHTML=p.email?'<i class="fas fa-check-circle"></i> Verified':'Not Verified';
+    if(av) document.getElementById('user-avatar').src=av;
+    const th=localStorage.getItem('healthlens_theme')||'light';
+    document.documentElement.setAttribute('data-theme',th);
+    document.getElementById('themeIconBtn').className=th==='dark'?'fas fa-sun':'fas fa-moon';
+}
+window.toggleGlobalTheme=function(){
+    const c=document.documentElement.getAttribute('data-theme');
+    const n=c==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',n);
+    localStorage.setItem('healthlens_theme',n);
+    document.getElementById('themeIconBtn').className=n==='dark'?'fas fa-sun':'fas fa-moon';
+    showToast(n==='dark'?'Dark Mode Activated':'Light Mode Activated');
+};
+
+/* ─── LOCATION ───────────────────────────────────────────── */
+function calcDist(a,b,c,d){const R=6371,dL=(c-a)*Math.PI/180,dO=(d-b)*Math.PI/180,x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dO/2)**2;return(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))).toFixed(1);}
+window.toggleLocationMenu=function(){ document.getElementById('locDropdown').classList.toggle('show'); };
+function applyLocation(lat,lng,name){
+    document.getElementById('locationText').innerText=name;
+    allDoctors.forEach(d=>{d.distance=calcDist(lat,lng,d.lat,d.lng);});
+    currentDoctors=[...allDoctors].sort((a,b)=>parseFloat(a.distance)-parseFloat(b.distance));
+    showToast('Nearest to '+name); renderDoctors(currentDoctors);
+    document.getElementById('locDropdown').classList.remove('show');
+    document.getElementById('locSearchInput').value=''; document.getElementById('locResults').innerHTML='';
+}
+window.useCurrentLocation=function(){
+    if(!navigator.onLine) return showToast('No internet.','danger');
+    const lt=document.getElementById('locationText'); lt.innerText='Locating...';
+    navigator.geolocation.getCurrentPosition(pos=>{
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`).then(r=>r.json()).then(d=>applyLocation(pos.coords.latitude,pos.coords.longitude,d.address.city||d.address.town||'Nearest')).catch(()=>applyLocation(pos.coords.latitude,pos.coords.longitude,'Nearest'));
+    },()=>{showToast('Location denied.','danger');lt.innerText='Location';},{enableHighAccuracy:true,timeout:10000,maximumAge:0});
+};
+let typTimer;
+document.getElementById('locSearchInput').addEventListener('input',e=>{
+    clearTimeout(typTimer);const q=e.target.value.trim(),lr=document.getElementById('locResults');
+    if(q.length<3){lr.innerHTML='';return;}
+    typTimer=setTimeout(()=>{
+        lr.innerHTML='<li><i class="fas fa-spinner fa-spin"></i> Searching...</li>';
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=5`).then(r=>r.json()).then(data=>{
+            lr.innerHTML=''; if(!data.length){lr.innerHTML='<li style="color:var(--text-muted)">No results</li>';return;}
+            data.forEach(p=>{const li=document.createElement('li');li.innerHTML=`<i class="fas fa-map-marker-alt"></i><span>${p.display_name}</span>`;li.onclick=()=>applyLocation(p.lat,p.lon,p.display_name.split(',')[0]);lr.appendChild(li);});
+        }).catch(()=>{lr.innerHTML='<li style="color:var(--danger-color)">Error</li>';});
+    },600);
+});
+
+/* ─── NOTIFICATIONS ──────────────────────────────────────── */
+function renderNotifications(){
+    const list=document.getElementById('notifList'),bell=document.getElementById('ts-3');
+    list.innerHTML='';
+    if(!notifications.length){list.innerHTML='<div class="notif-empty">No appointments booked yet.</div>';bell.classList.remove('has-notif');}
+    else{bell.classList.add('has-notif');[...notifications].reverse().forEach(n=>{const d=document.createElement('div');d.className='notif-item';d.innerHTML=`<span><i class="fas fa-calendar-check" style="color:var(--success-color);"></i> ${n.text}</span><span class="notif-time">${n.time}</span>`;list.appendChild(d);});}
+}
+document.getElementById('ts-3').addEventListener('click',e=>{e.stopPropagation();document.getElementById('notifPanel').classList.toggle('show');});
+window.clearNotifications=function(){notifications=[];localStorage.removeItem(notifKey);renderNotifications();};
+document.addEventListener('click',e=>{
+    if(!e.target.closest('.location-wrapper')) document.getElementById('locDropdown').classList.remove('show');
+    if(!e.target.closest('#notifPanel')&&!e.target.closest('#ts-3')) document.getElementById('notifPanel').classList.remove('show');
+});
+
+/* ─── FILTERS ────────────────────────────────────────────── */
+function populateFilters(){
+    [...new Set(allDoctors.map(d=>d.domain))].forEach(dom=>{const o=document.createElement('option');o.value=dom;o.innerText=dom;document.getElementById('ts-7').appendChild(o);});
+}
+function applySearchAndFilter(){
+    const term=document.getElementById('searchDoctor').value.toLowerCase(),sel=document.getElementById('ts-7').value;
+    currentDoctors=allDoctors.filter(d=>(d.name.toLowerCase().includes(term)||d.hospital.toLowerCase().includes(term))&&(sel==='All'||d.domain===sel));
+    const lt=document.getElementById('locationText').innerText;
+    if(lt!=='Location' && lt!=='Locating...') currentDoctors.sort((a,b)=>parseFloat(a.distance||0)-parseFloat(b.distance||0));
+    renderDoctors(currentDoctors);
+}
+document.getElementById('searchDoctor').addEventListener('input',applySearchAndFilter);
+document.getElementById('ts-7').addEventListener('change',applySearchAndFilter);
+
+/* ─── RENDER DOCTORS ─────────────────────────────────────── */
+function renderDoctors(docs){
+    const grid=document.getElementById('doctorGrid');grid.innerHTML='';
+    if(!docs.length){grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:20px;">No doctors found.</p>';return;}
+    docs.forEach((doc,idx)=>{
+        let distHtml='';
+        if(doc.distance){const c=parseFloat(doc.distance)<10?'var(--success-color)':'var(--danger-color)';distHtml=`<span id="${idx===0?'ts-10':''}" style="color:${c};font-size:11px;font-weight:bold;display:flex;align-items:center;gap:4px;margin-top:5px;"><i class="fas fa-map-marker-alt"></i> ${doc.distance} km away</span>`;}
+        const isSel=doc.id===activeDoctorId;
+        const card=document.createElement('div');
+        card.className=isSel?'dr-card selected-card':'dr-card';
+        if(idx===0) card.id='ts-9';
+        card.setAttribute('data-id',doc.id);
+        card.innerHTML=`<div class="dr-card-top"><img src="${doc.image}" alt="${doc.name}" class="dr-img" onerror="this.src='https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(doc.name)}'"><div class="dr-info"><h4>${doc.name}</h4><span class="dr-domain"><i class="fas fa-stethoscope"></i> ${doc.domain}</span><span class="dr-hospital">${doc.hospital}</span>${distHtml}</div></div><div class="dr-card-actions"><button class="${isSel?'btn-book btn-selected btn-select-doc':'btn-book btn-select-doc'}" id="${idx===0?'ts-18':''}" onclick="selectDoctor(${doc.id},event)">${isSel?'<i class="fas fa-check-circle"></i> Selected':'Select Doctor'}</button><button class="btn-detail" id="${idx===0?'ts-11':''}" onclick="openDetails(${doc.id})">Detail</button></div>`;
+        grid.appendChild(card);
+    });
+}
+
+window.selectDoctor=function(id,event){
+    if(event) event.stopPropagation();
+    activeDoctorId=id;selectedTimeSlot=null;
+    document.querySelectorAll('.dr-card').forEach(c=>{
+        const cid=parseInt(c.getAttribute('data-id')),btn=c.querySelector('.btn-select-doc');
+        if(cid===activeDoctorId){c.classList.add('selected-card');if(btn){btn.innerHTML='<i class="fas fa-check-circle"></i> Selected';btn.classList.add('btn-selected');}}
+        else{c.classList.remove('selected-card');if(btn){btn.innerHTML='Select Doctor';btn.classList.remove('btn-selected');}}
+    });
+    renderTimeSlots();
+    if(window.innerWidth<968&&!tourActive) setTimeout(()=>document.querySelector('.calendar-section').scrollIntoView({behavior:'smooth'}),100);
+};
+
+window.openDetails=function(id){
+    selectDoctor(id);
+    const doc=allDoctors.find(d=>d.id===id);if(!doc) return;
+    let stars='';for(let i=0;i<5;i++) stars+=`<i class="fa${i<Math.floor(doc.rating)?'s':'r'} fa-star"></i>`;
+    let wa=doc.phone.replace(/[^0-9]/g,'');if(wa.startsWith('0')) wa='91'+wa.substring(1);
+    const mapUrl=`https://maps.google.com/maps?q=${doc.lat},${doc.lng}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    const dirUrl=`https://www.google.com/maps/dir/?api=1&destination=${doc.lat},${doc.lng}`;
+    document.getElementById('detailContent').innerHTML=`
+        <img src="${doc.image}" alt="${doc.name}" class="detail-main-img" id="ts-12" onerror="this.src='https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(doc.name)}'">
+        <h2 class="detail-name">${doc.name}</h2>
+        <div class="detail-meta">
+            <span><i class="fas fa-stethoscope"></i>${doc.domain}</span>
+            <span><i class="far fa-hospital"></i>${doc.hospital}</span>
+            <span><i class="fas fa-phone-alt"></i>+${wa}</span>
+            <span><i class="fas fa-rupee-sign"></i>${doc.experience.includes('Fees')?doc.experience.split('Fees: ')[1]||'Standard':'Standard Rates'}</span>
+        </div>
+        <div class="detail-section"><h4><i class="fas fa-briefcase-medical"></i>Experience</h4><p>${doc.experience}</p></div>
+        <div class="detail-section" id="ts-spec"><h4><i class="fas fa-list-ul"></i>Specialities</h4><ul class="speciality-list">${doc.specialities.map(s=>`<li>${s}</li>`).join('')}</ul></div>
+        <div class="detail-section" id="ts-map">
+            <h4><i class="fas fa-map-marked-alt"></i>Clinic Location</h4>
+            <div class="map-container" onclick="window.open('${dirUrl}','_blank')">
+                <iframe width="100%" height="160" frameborder="0" scrolling="no" src="${mapUrl}" style="pointer-events:none;"></iframe>
+                <div class="map-overlay"><button class="btn-directions"><i class="fas fa-directions"></i> Get Directions</button></div>
+            </div>
+        </div>
+        <div class="detail-section"><h4>Reviews</h4><div class="reviews-box"><div class="stars">${stars} <span style="color:var(--text-muted);margin-left:5px;">${doc.rating}</span></div><p>"${doc.reviewText}"</p></div></div>
+        <div class="detail-actions">
+            <button class="btn-call" id="ts-call" onclick="window.location.href='tel:+${wa}'"><i class="fas fa-phone-alt"></i> Call</button>
+            <button class="btn-chat" id="ts-wa" onclick="window.open('https://wa.me/${wa}','_blank')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+        </div>`;
+    document.getElementById('dashboard').classList.add('show-details');
+};
+document.getElementById('closeDetail').addEventListener('click',()=>document.getElementById('dashboard').classList.remove('show-details'));
+
+/* ─── CALENDAR ───────────────────────────────────────────── */
+function formatDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function renderCalendar(){
+    document.getElementById('calendarBody').innerHTML='';
+    const y=currentDate.getFullYear(),m=currentDate.getMonth();
+    const MN=["January","February","March","April","May","June","July","August","September","October","November","December"];
+    document.getElementById('monthYearDisplay').innerText=`${MN[m]} ${y}`;
+    const fd=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate();
+    let date=1;
+    for(let i=0;i<6;i++){
+        const row=document.createElement('tr');
+        for(let j=0;j<7;j++){
+            const cell=document.createElement('td');
+            if((i===0&&j<fd)||date>dim){cell.classList.add('empty');}
+            else{
+                cell.innerText=date;
+                if(j===0) cell.classList.add('sunday');
+                const ld=new Date(y,m,date),ds=formatDate(ld);
+                if(ds===formatDate(activeSelectedDate)) cell.classList.add('active-date');
+                if(bookings[ds]&&Object.keys(bookings[ds]).length) cell.classList.add('has-booking');
+                if(date===new Date().getDate()+1&&m===new Date().getMonth()) cell.id='ts-date';
+                cell.addEventListener('click',()=>{
+                    if(!activeDoctorId){if(!tourActive)showToast('Select a doctor first!','danger');return;}
+                    activeSelectedDate=ld;selectedTimeSlot=null;renderCalendar();renderTimeSlots();
+                });
+                date++;
+            }
+            row.appendChild(cell);
+        }
+        document.getElementById('calendarBody').appendChild(row);
+        if(date>dim) break;
+    }
+}
+document.getElementById('prevMonth').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();});
+document.getElementById('nextMonth').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();});
+
+/* ─── TIME SLOTS ─────────────────────────────────────────── */
+function renderTimeSlots(){
+    const c=document.getElementById('timeSlotsContainer');c.innerHTML='';
+    const ds=formatDate(activeSelectedDate);
+    const DN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    document.getElementById('selectedDateDisplay').innerText=`${DN[activeSelectedDate.getDay()]}, ${activeSelectedDate.getDate()} ${MN[activeSelectedDate.getMonth()]} ${activeSelectedDate.getFullYear()}`;
+    const daily=bookings[ds]||{};
+    timeSlots.forEach((slot,idx)=>{
+        const btn=document.createElement('button');btn.className='slot-btn';btn.innerText=slot;
+        if(idx===0) btn.id='ts-slot';
+        if(daily[slot]){btn.classList.add('booked');btn.title='Booked';}
+        else{
+            if(selectedTimeSlot===slot) btn.classList.add('selected-slot');
+            btn.addEventListener('click',()=>{
+                if(!activeDoctorId){if(!tourActive)showToast('Select a doctor first!','danger');return;}
+                selectedTimeSlot=slot;renderTimeSlots();
+            });
+        }
+        c.appendChild(btn);
+    });
+    document.getElementById('mainConfirmBtn').style.display=(activeDoctorId&&selectedTimeSlot)?'block':'none';
+}
+
+/* ─── BOOKING WITH GOOGLE CALENDAR SYNC ──────────────────── */
+window.executeBooking= async function(){
+    if(!activeDoctorId||!selectedTimeSlot) return;
+    if(!tourActive&&localStorage.getItem('healthlens_logged_in')!=='true'){showToast('Please log in to book.','danger');setTimeout(()=>window.location.href='login.html',2500);return;}
+    
+    const doc=allDoctors.find(d=>d.id===activeDoctorId),ds=formatDate(activeSelectedDate);
+    if(!bookings[ds]) bookings[ds]={};
+    if(bookings[ds][selectedTimeSlot]) return showToast('Already booked at this time!','danger');
+
+    // 🟢 MAKE.COM WEBHOOK PAYLOAD (With "appointment" Tag)
+    const p = JSON.parse(localStorage.getItem(`profileData_${activeUser}`)) || {};
+    const patientName = p.name || activeUser;
+    const patientEmail = p.email || "No email provided";
+    const notes = document.getElementById('patientNotes').value || "No additional notes provided.";
+
+    const payload = {
+        actionType: "appointment", // THIS TELLS MAKE.COM WHAT TO DO
+        patientName: patientName,
+        patientEmail: patientEmail,
+        doctorName: doc.name,
+        hospital: doc.hospital,
+        date: ds,
+        time: selectedTimeSlot,
+        notes: notes
+    };
+
+    const MAKE_WEBHOOK_URL = "https://hook.eu1.make.com/zol91lggd2ci456mdm5ihq2ub8mye83h";
+    
+    // Fire it silently to Make.com
+    fetch(MAKE_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).catch(err => console.error("Webhook error:", err));
+
+    // Local Storage Saves
+    bookings[ds][selectedTimeSlot]=doc.name;
+    localStorage.setItem(bookingKey,JSON.stringify(bookings));
+    notifications.push({text:`Confirmed: <b>${doc.name}</b> on ${ds} at ${selectedTimeSlot}`,time:new Date().toLocaleString()});
+    localStorage.setItem(notifKey,JSON.stringify(notifications));
+    renderNotifications();
+    
+    showToast(`Confirmed! Syncing with ${doc.name} on ${ds} at ${selectedTimeSlot}...`);
+    
+    activeDoctorId=null;selectedTimeSlot=null;
+    document.getElementById('patientNotes').value='';
+    document.getElementById('mainConfirmBtn').style.display='none';
+    renderDoctors(currentDoctors);renderTimeSlots();renderCalendar();
+    document.getElementById('dashboard').classList.remove('show-details');
+    if(tourActive) endTour(true);
+};
+
+/* ═══════════════════════════════════════════════════════════
+   FULLY AUTOMATED TOUR ENGINE
+   ═══════════════════════════════════════════════════════════ */
+let tourActive=false, tourIdx=0;
+const ghost=document.getElementById('ghostCursor');
+const ring=document.getElementById('tourRing');
+
+const STEPS=[
+    {target:'#ts-1',icon:'fas fa-home',title:'Portal Overview',
+     desc:'Welcome to HealthLens! This is your specialist booking portal — find doctors, view profiles, and book appointments all from here.',
+     action:null,actionLabel:null},
+    {target:'#ts-2',icon:'fas fa-moon',title:'Dark / Light Mode',
+     desc:'Toggle between Light and Dark themes. Your preference is saved — next time you open the app it stays the same.',
+     action:null,actionLabel:null},
+    {target:'#ts-3',icon:'fas fa-bell',title:'Notifications',
+     desc:'Every appointment you book triggers a real-time notification here. The red dot means there are unread alerts.',
+     action:null,actionLabel:null},
+    {target:'#ts-4',icon:'fas fa-user-circle',title:'Your Profile',
+     desc:'Click your avatar to update your profile photo, health information, and account settings.',
+     action:null,actionLabel:null},
+    {target:'#ts-5',icon:'fas fa-map-marker-alt',title:'GPS Location',
+     desc:'Grant location access and the system sorts every doctor by real GPS distance — nearest specialists appear first.',
+     action:null,actionLabel:null},
+    {target:'#ts-6',icon:'fas fa-search',title:'Live Search',
+     desc:'Type a doctor\'s name, hospital, or condition — the grid updates in real-time as you type, no reload needed.',
+     action:null,actionLabel:null},
+    {target:'#ts-7',icon:'fas fa-filter',title:'Speciality Filter',
+     desc:'Filter by Cardiologist, Gynaecologist, Neurosurgeon, and 8 more specialities with a single click.',
+     action:null,actionLabel:null},
+    {target:'#ts-9',icon:'fas fa-id-badge',title:'Doctor Card',
+     desc:'Each card shows the doctor\'s photo, domain, hospital, and star rating at a glance. Let\'s open Dr. Nitin Mankar\'s full profile now.',
+     action:null,actionLabel:null},
+    {target:'#ts-11',icon:'fas fa-folder-open',title:'Opening Full Profile',
+     desc:'The "Detail" button opens the full doctor profile — watch the cursor click it now.',
+     action:()=>{const e=document.getElementById('ts-11');if(e)e.click();},
+     actionLabel:'Opening Dr. Nitin Mankar\'s profile…',delay:500},
+    {target:'#ts-12',icon:'fas fa-user-md',title:'Doctor Photo & Info',
+     desc:'High-res photo, domain, hospital, phone number and consultation fee — everything to help you decide.',
+     action:null,actionLabel:null,delay:650},
+    {target:'#ts-spec',icon:'fas fa-list-ul',title:'Specialities',
+     desc:'Lists every condition and procedure the doctor handles — confirming they treat your specific concern.',
+     action:null,actionLabel:null,
+     scrollInDetail:true},
+    {target:'#ts-map',icon:'fas fa-map',title:'Clinic Location Map',
+     desc:'Live embedded map pinpointing the clinic. Click "Get Directions" for turn-by-turn Google Maps navigation.',
+     action:null,actionLabel:null,
+     scrollInDetail:true},
+    {target:'#ts-call',icon:'fas fa-phone',title:'Direct Call Button',
+     desc:'Tap Call and your phone dialer opens instantly — no copy-pasting. Connects you directly to the clinic.',
+     action:null,actionLabel:null,
+     scrollInDetail:true},
+    {target:'#ts-wa',icon:'fab fa-whatsapp',title:'WhatsApp Chat',
+     desc:'Opens a WhatsApp chat to the clinic directly — perfect for sending reports or asking questions about timing.',
+     action:null,actionLabel:null,
+     scrollInDetail:true},
+    {target:'#closeDetail',icon:'fas fa-arrow-left',title:'Closing the Profile',
+     desc:'Now let\'s close this panel and go back to complete a live booking. Watch the cursor.',
+     action:()=>{const e=document.getElementById('closeDetail');if(e)e.click();},
+     actionLabel:'Closing profile and returning…',delay:300},
+    {target:'#ts-18',icon:'fas fa-hand-pointer',title:'Selecting the Doctor',
+     desc:'The cursor will click "Select Doctor" now — the card highlights green and the calendar below unlocks.',
+     action:()=>{const e=document.getElementById('ts-18');if(e)e.click();},
+     actionLabel:'Selecting Dr. Nitin Mankar…',delay:400},
+    {target:'#ts-19',icon:'fas fa-calendar-alt',title:'Scheduling Calendar',
+     desc:'The calendar is now unlocked. Navigate months with arrows. Red-dotted dates have existing bookings. Sundays are red.',
+     action:null,actionLabel:null},
+    {target:'#ts-date',icon:'fas fa-calendar-day',title:'Picking Tomorrow\'s Date',
+     desc:'The cursor selects tomorrow — the calendar highlights the date and time slots update automatically.',
+     action:()=>{const e=document.getElementById('ts-date');if(e)e.click();},
+     actionLabel:'Selecting tomorrow\'s date…',delay:400},
+    {target:'#ts-slot',icon:'fas fa-clock',title:'Selecting a Time Slot',
+     desc:'Red slots are already booked. The cursor picks the 8:00 AM slot — it turns blue to confirm selection.',
+     action:()=>{const e=document.getElementById('ts-slot');if(e)e.click();},
+     actionLabel:'Selecting the 8:00 AM slot…',delay:500},
+    {target:'#mainConfirmBtn',icon:'fas fa-check-circle',title:'Confirming the Appointment',
+     desc:'The green Confirm button appears when all three — doctor, date, and time — are chosen. Clicking it locks in your booking!',
+     action:()=>{const e=document.getElementById('mainConfirmBtn');if(e)e.click();},
+     actionLabel:'Confirming your appointment — watch the magic!',delay:600}
+];
+
+function spotlightEl(el){
+    if(!el){ring.classList.remove('active');return;}
+    const r=el.getBoundingClientRect(),pad=10;
+    ring.style.left=(r.left-pad)+'px'; ring.style.top=(r.top-pad)+'px';
+    ring.style.width=(r.width+pad*2)+'px'; ring.style.height=(r.height+pad*2)+'px';
+    ring.style.borderRadius=getComputedStyle(el).borderRadius||'10px';
+    ring.classList.add('active');
+}
+
+function animateCursorTo(el,thenClick){
+    const r=el.getBoundingClientRect();
+    ghost.style.left=(r.left+r.width/2)+'px';
+    ghost.style.top=(r.top+r.height/2)+'px';
+    if(thenClick){
+        setTimeout(()=>{
+            ghost.classList.add('clicking');
+            setTimeout(()=>{ghost.classList.remove('clicking');thenClick();},200);
+        },520);
+    }
+}
+
+function positionPanel(el){
+    const panel=document.getElementById('tourPanel');
+    const r=el.getBoundingClientRect();
+    const pw=panel.offsetWidth||330,ph=panel.offsetHeight||220;
+    const winH=window.innerHeight,winW=window.innerWidth,pad=16;
+    let top,left;
+    if(r.bottom+ph+pad<winH)      top=r.bottom+pad;
+    else if(r.top-ph-pad>0)        top=r.top-ph-pad;
+    else                            top=winH-ph-pad;
+    left=r.left+r.width/2-pw/2;
+    left=Math.max(pad,Math.min(left,winW-pw-pad));
+    panel.style.top=top+'px'; panel.style.left=left+'px';
+}
+
+function renderTourStep(){
+    const step=STEPS[tourIdx],total=STEPS.length,isLast=tourIdx===total-1;
+    document.getElementById('tpIcon').innerHTML=`<i class="${step.icon}"></i>`;
+    document.getElementById('tpTitle').innerText=step.title;
+    document.getElementById('tpStep').innerText=`Step ${tourIdx+1} of ${total}`;
+    document.getElementById('tpDesc').innerText=step.desc;
+    const ar=document.getElementById('tpActionRow');
+    if(step.actionLabel){ar.classList.add('show');document.getElementById('tpActionText').innerText=step.actionLabel;}
+    else ar.classList.remove('show');
+    const nb=document.getElementById('tpNext');
+    if(isLast){nb.classList.add('done');nb.innerHTML='Finish <i class="fas fa-check"></i>';}
+    else{nb.classList.remove('done');nb.innerHTML='Next <i class="fas fa-chevron-right"></i>';}
+
+    const delay=step.delay||60;
+    setTimeout(()=>{
+        let el=document.querySelector(step.target);
+        if(!el){return;}
+        if(step.scrollInDetail){
+            const dc=document.getElementById('detailContent');
+            if(dc) dc.scrollTo({top:el.offsetTop-20,behavior:'smooth'});
+        } else {
+            el.scrollIntoView({behavior:'smooth',block:'center'});
+        }
+        setTimeout(()=>{
+            el=document.querySelector(step.target);
+            if(!el) return;
+            spotlightEl(el);
+            positionPanel(el);
+            if(step.action){
+                animateCursorTo(el,()=>step.action());
+            } else {
+                animateCursorTo(el,null);
+            }
+        },340);
+    },delay);
+}
+
+window.nextTourStep=function(){
+    if(tourIdx>=STEPS.length-1) endTour(true);
+    else{tourIdx++;renderTourStep();}
+};
+window.skipTour=function(){ endTour(false); };
+
+window.handleTourBtn=function(){ startTour(); };
+
+function checkAutoLaunch(){
+    if(isGuest){
+        setTimeout(startTour,800);
+    } else {
+        if(!localStorage.getItem(tourDoneKey)) setTimeout(startTour,800);
+    }
+}
+
+window.startTour=function(){
+    tourActive=true; tourIdx=0;
+    document.getElementById('tourOverlay').classList.add('active');
+    document.getElementById('tourPanel').classList.add('active');
+    ghost.style.display='block';
+    ring.classList.add('active');
+    document.getElementById('tourTriggerBtn').classList.remove('glow-once');
+    renderTourStep();
+};
+
+window.endTour=function(completed){
+    tourActive=false;
+    document.getElementById('tourOverlay').classList.remove('active');
+    document.getElementById('tourPanel').classList.remove('active');
+    ring.classList.remove('active');
+    ghost.style.display='none';
+    if(!isGuest) localStorage.setItem(tourDoneKey,completed?'completed':'skipped');
+    activeDoctorId=null;selectedTimeSlot=null;
+    document.querySelectorAll('.dr-card').forEach(c=>c.classList.remove('selected-card'));
+    document.getElementById('mainConfirmBtn').style.display='none';
+    renderTimeSlots();
+    document.getElementById('dashboard').classList.remove('show-details');
+    if(completed&&typeof confetti==='function'){
+        document.getElementById('celebrationModal').classList.add('active');
+        confetti({particleCount:150,spread:100,origin:{y:0.6},colors:['#2a7fba','#10b981','#f59e0b']});
+    }
+};
+window.closeCelebration=function(){
+    document.getElementById('celebrationModal').classList.remove('active');
+    document.getElementById('mainScrollArea').scrollTo(0,0);
+};
+
+/* ─── INIT ───────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded',()=>{
+    loadUserProfile();
+    populateFilters();
+    renderDoctors(allDoctors);
+    renderCalendar();
+    renderTimeSlots();
+    renderNotifications();
+    const glowKey=`hl_glow_${activeUser}`;
+    if(!localStorage.getItem(glowKey)){
+        document.getElementById('tourTriggerBtn').classList.add('glow-once');
+        localStorage.setItem(glowKey,'1');
+    }
+    checkAutoLaunch();
+});
+</script>
+</body>
+</html>

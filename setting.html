@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HealthLens | Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="global.css">
+
+    <style>
+        /* 🟢 EXACT, CONSISTENT THEME VARIABLES */
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --sidebar-bg: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            --app-bg: #f4f7fe; 
+            --card-bg: #ffffff; 
+            --text-dark: #0f172a; 
+            --text-muted: #64748b; 
+            --border-color: #e2e8f0; 
+            --danger: #ef4444; 
+            --success: #10b981;
+            --warning: #f59e0b;
+            --shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] {
+            --sidebar-bg: linear-gradient(180deg, #050505 0%, #000000 100%);
+            --app-bg: #000000; 
+            --card-bg: #111111; 
+            --text-dark: #f8fafc; 
+            --text-muted: #94a3b8; 
+            --border-color: #262626;
+            --shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        /* 🟢 BULLETPROOF STRUCTURAL GRID (Bootstrap-style) */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent;}
+        
+        body { 
+            display: flex; 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
+            background: var(--app-bg); 
+            color: var(--text-dark);
+        }
+
+        /* 🟢 DESKTOP SIDEBAR (Fixed Width, No Squishing) */
+        .sidebar {
+            width: 260px; 
+            height: 100vh; 
+            background: var(--sidebar-bg); 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 30px 20px; 
+            flex-shrink: 0; 
+            z-index: 100;
+        }
+
+        .sidebar-header { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; padding-left: 10px;}
+        .sidebar-logo { width: 35px; height: auto; }
+        .sidebar-title { font-size: 1.4rem; font-weight: 800; color: white; letter-spacing: 0.5px;}
+
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .nav-item { 
+            display: flex; align-items: center; gap: 15px; padding: 14px 16px; 
+            border-radius: 12px; cursor: pointer; color: #94a3b8; 
+            font-weight: 600; font-size: 0.95rem; transition: 0.2s; text-decoration: none;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+        .nav-item i { font-size: 18px; width: 24px; text-align: center; }
+
+        /* 🟢 DESKTOP MAIN CONTENT */
+        .main-content { 
+            flex: 1; 
+            height: 100vh; 
+            overflow-y: auto; 
+            padding: 40px 50px; 
+        }
+
+        .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;}
+        .page-title { font-size: 1.8rem; font-weight: 800; color: var(--text-dark); margin-bottom: 5px;}
+        .page-subtitle { font-size: 0.9rem; color: var(--text-muted); font-weight: 500;}
+        .header-logout-btn { display: none; } /* Hidden on desktop */
+
+        /* Settings Grid Layout */
+        .settings-layout { 
+            display: grid; 
+            grid-template-columns: 280px 1fr; 
+            gap: 30px; 
+            align-items: start;
+            max-width: 1200px;
+        }
+
+        /* Settings Menu */
+        .settings-nav { background: var(--card-bg); border-radius: 20px; padding: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow); position: sticky; top: 0;}
+        .set-nav-item { padding: 14px 20px; border-radius: 12px; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 12px; transition: 0.2s; margin-bottom: 5px;}
+        .set-nav-item:hover { background: var(--app-bg); color: var(--primary); }
+        .set-nav-item.active { background: rgba(37, 99, 235, 0.1); color: var(--primary); font-weight: 700; border-left: 4px solid var(--primary); border-radius: 4px 12px 12px 4px;}
+
+        /* Settings Panels */
+        .settings-panel { display: none; animation: fadeIn 0.3s ease; }
+        .settings-panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .settings-card { background: var(--card-bg); border-radius: 20px; padding: 30px; border: 1px solid var(--border-color); box-shadow: var(--shadow); margin-bottom: 25px; }
+        .set-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; font-size: 1.1rem; font-weight: 800;}
+        .set-card-header i { color: var(--primary); }
+
+        .set-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border-color); }
+        .set-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .set-info h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+        .set-info p { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; max-width: 90%;}
+        
+        /* Toggles & Inputs */
+        .switch { position: relative; display: inline-block; width: 46px; height: 24px; flex-shrink: 0;}
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        .modern-select { padding: 10px 15px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--app-bg); color: var(--text-dark); font-size: 0.85rem; font-weight: 600; outline: none; cursor: pointer; min-width: 150px;}
+        
+        .action-btn { padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; border: none; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;}
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid var(--danger); }
+        .btn-warning { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid var(--warning); }
+
+        /* Premium & NGO Banners */
+        .premium-banner { background: linear-gradient(135deg, #8b5cf6, #6366f1); border-radius: 20px; padding: 25px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);}
+        .premium-badge { background: #f59e0b; color: white; font-size: 0.75rem; font-weight: 800; padding: 6px 14px; border-radius: 20px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);}
+        
+        .ngo-banner { background: linear-gradient(135deg, #10b981, #059669); border-radius: 20px; padding: 20px; color: white; display: flex; align-items: center; gap: 20px; margin-top: 20px; }
+        .ngo-banner i { font-size: 40px; opacity: 0.8;}
+
+        /* Collaboration Team Grid */
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;}
+        .team-card { background: var(--app-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 12px; transition: 0.2s;}
+        .team-card img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);}
+        .team-badge { font-size: 0.6rem; background: rgba(16,185,129,0.1); color: var(--success); padding: 3px 8px; border-radius: 10px; font-weight: 800;}
+
+        /* QR Overlay */
+        .qr-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; display: none; align-items: center; justify-content: center; }
+        .qr-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
+        .qr-card { background: var(--card-bg); padding: 40px; border-radius: 24px; text-align: center; position: relative; max-width: 400px; width: 90%;}
+        .close-qr { position: absolute; top: 15px; right: 15px; background: var(--app-bg); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; color: var(--text-muted); }
+        .qr-img { width: 100%; max-width: 220px; border: 4px solid var(--primary); border-radius: 16px; padding: 10px; background: white; margin: 20px 0;}
+        .qr-timer { font-size: 24px; font-family: monospace; font-weight: bold; color: var(--danger); }
+        
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .modern-toast { background: var(--card-bg); color: var(--text-dark); padding: 16px 24px; border-radius: 12px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 14px; border-left: 4px solid var(--primary); transform: translateX(120%); transition: 0.4s; }
+        .modern-toast.show { transform: translateX(0); }
+
+        /* ==================================================
+           📱 MOBILE PERFECT FLEX-GRID (Bootstrap Style)
+           ================================================== */
+        @media (max-width: 968px) {
+            body { flex-direction: column; }
+            
+            /* The Bottom Navigation */
+            .sidebar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 80px;
+                background: var(--card-bg);
+                border-top: 1px solid var(--border-color);
+                flex-direction: row;
+                padding: 0;
+                border-radius: 20px 20px 0 0;
+                z-index: 9999;
+                box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+            }
+            
+            .sidebar-header { display: none; } /* Hide logo on mobile */
+            
+            .nav-list {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-evenly;
+                align-items: center;
+                width: 100%;
+                height: 100%;
+            }
+            
+            .nav-item {
+                flex-direction: column;
+                gap: 4px;
+                padding: 8px;
+                margin: 0;
+                width: 65px;
+                background: transparent !important;
+                color: var(--text-muted);
+                box-shadow: none !important;
+                border-radius: 8px;
+            }
+            
+            .nav-item i { font-size: 22px; width: auto; }
+            .nav-text { font-size: 0.65rem; font-weight: 600; }
+            
+            .nav-item.active { color: var(--primary) !important; }
+            .nav-item.active i { transform: translateY(-3px); }
+
+            /* Content Adjustments */
+            .main-content { padding: 20px 15px 100px 15px; } /* 100px clears the bottom nav perfectly */
+            .settings-layout { grid-template-columns: 1fr; gap: 20px; }
+            
+            /* Horizontal Settings Menu */
+            .settings-nav { 
+                display: flex; 
+                overflow-x: auto; 
+                white-space: nowrap; 
+                padding: 10px; 
+                border-radius: 15px; 
+                border: none; 
+                box-shadow: none;
+                background: transparent;
+                margin-bottom: 0;
+            }
+            .settings-nav::-webkit-scrollbar { display: none; }
+            .set-nav-item { margin-bottom: 0; margin-right: 10px; flex-shrink: 0; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 10px 15px;}
+            .set-nav-item.active { background: var(--primary); color: white; border-color: var(--primary); border-radius: 20px;}
+
+            /* Top Header with Logout */
+            .page-header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 15px;}
+            .page-title { font-size: 1.5rem; }
+            .page-subtitle { display: none; } /* Hide subtitle to save space */
+            .header-logout-btn { 
+                display: flex; background: rgba(239,68,68,0.1); color: var(--danger); 
+                border: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; align-items: center; gap: 5px;
+            }
+
+            .set-row { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .set-row .switch { align-self: flex-end; margin-top: -30px; }
+            .set-row select, .set-row button { width: 100%; margin-top: 10px; }
+            
+            .premium-banner { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .ngo-banner { flex-direction: column; text-align: center; }
+            .ngo-banner button { margin-left: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body id="app-root" data-theme="light">
+
+    <div id="google_translate_element" style="display:none;"></div>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="qr-overlay" id="qrOverlay">
+        <div class="qr-card">
+            <button class="close-qr" onclick="closeQRModal()" id="qrCloseBtn"><i class="fas fa-times"></i></button>
+            <div id="qrContentBox">
+                <h3 id="qrTitle" style="font-weight: 800; font-size: 1.5rem; margin-bottom: 5px;">Processing...</h3>
+                <p id="qrDesc" style="color: var(--text-muted); font-size: 0.9rem;">Scan the code below.</p>
+                <img src="assets/AccountQRCodeState%20Bank%20of%20India%20-%200599_DARK_THEME.png" class="qr-img" alt="QR Code" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=HealthLens'">
+                <div class="qr-timer" id="qrTimerDisplay">00:00</div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 10px;"><i class="fas fa-lock"></i> Secured by HealthLens Pay</p>
+            </div>
+            <div id="qrSuccessBox" style="display: none; flex-direction: column; align-items: center; gap: 15px;">
+                <i class="fas fa-check-circle" style="font-size: 60px; color: var(--success);"></i>
+                <h3 style="font-weight: 800;">Thank You!</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Please contact <b>nikhilcaptain28@gmail.com</b> for immediate feature activation.</p>
+                <button class="action-btn btn-primary" style="margin-top: 10px;" onclick="closeQRModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="assets/logo_health_lens_transparent_only_logo.png" alt="HealthLens Logo" class="sidebar-logo">
+            <span class="sidebar-title">HealthLens</span>
+        </div>
+        
+        <ul class="nav-list">
+            <li class="nav-item" onclick="location.href='dashboard.html'"><i class="fas fa-th-large"></i> <span class="nav-text">Dashboard</span></li>
+            <li class="nav-item" onclick="location.href='Doctor.html'"><i class="fas fa-calendar-plus"></i> <span class="nav-text">Schedule</span></li>
+            <li class="nav-item" onclick="location.href='report.html'"><i class="fas fa-file-medical-alt"></i> <span class="nav-text">Archive</span></li>
+            <li class="nav-item" onclick="location.href='profile.html'"><i class="fas fa-user"></i> <span class="nav-text">Profile</span></li>
+            <li class="nav-item active"><i class="fas fa-cog"></i> <span class="nav-text">Settings</span></li>
+            <li class="nav-item" onclick="logoutUser()" style="color: #ffb3b3; margin-top: auto; display: flex;" id="desktopLogout"><i class="fas fa-sign-out-alt"></i> <span class="nav-text">Sign Out</span></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        
+        <div class="page-header">
+            <div>
+                <h2 class="page-title">Settings & Preferences</h2>
+                <p class="page-subtitle">Manage your account, UI theme, AI engine, and collaborations.</p>
+            </div>
+            <button class="header-logout-btn" onclick="logoutUser()"><i class="fas fa-power-off"></i> Logout</button>
+        </div>
+
+        <div class="settings-layout">
+            
+            <div class="settings-nav">
+                <div class="set-nav-item active" onclick="switchSettingsTab('general', this)"><i data-lucide="monitor"></i> Appearance</div>
+                <div class="set-nav-item" onclick="switchSettingsTab('notifications', this)"><i data-lucide="bell"></i> Notifications</div>
+                <div class="set-nav-item" onclick="switchSettingsTab('ai-engine', this)"><i data-lucide="cpu"></i> AI Options</div>
+                <div class="set-nav-item" onclick="switchSettingsTab('collaboration', this)"><i data-lucide="users"></i> Team Hub</div>
+                <div class="set-nav-item" onclick="switchSettingsTab('premium', this)"><i data-lucide="sparkles"></i> Subscription</div>
+                <div class="set-nav-item" onclick="switchSettingsTab('privacy', this)"><i data-lucide="shield-check"></i> Data Wipe</div>
+                <div class="set-nav-item" onclick="switchSettingsTab('emergency', this)"><i data-lucide="ambulance"></i> Emergency</div>
+            </div>
+
+            <div class="settings-content">
+                
+                <div id="general" class="settings-panel active">
+                    <div class="settings-card">
+                        <div class="set-card-header"><h3><i data-lucide="moon"></i> Global Theme Settings</h3></div>
+                        <div class="set-row">
+                            <div class="set-info">
+                                <h4>Dark Mode Integration</h4>
+                                <p>Switch between Light and Dark themes universally.</p>
+                            </div>
+                            <label class="switch"><input type="checkbox" id="masterThemeToggle" onchange="toggleGlobalThemeFromSettings()"><span class="slider"></span></label>
+                        </div>
+                        <div class="set-row">
+                            <div class="set-info">
+                                <h4>Application Language</h4>
+                                <p>Instantly translate the UI into 10+ languages using AI.</p>
+                            </div>
+                            <select class="modern-select" id="languageSelector" onchange="changeLanguage(this.value)">
+                                <option value="en">English (Default)</option>
+                                <option value="hi">Hindi</option>
+                                <option value="mr">Marathi</option>
+                                <option value="bn">Bengali</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="zh-CN">Chinese</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="notifications" class="settings-panel">
+                    <div class="settings-card">
+                        <div class="set-card-header"><h3><i data-lucide="bell-ring"></i> Smart Alerts</h3></div>
+                        <div class="set-row">
+                            <div class="set-info">
+                                <h4>Appointment Alerts</h4>
+                                <p>Audio/visual alerts 30 mins prior to visits.</p>
+                            </div>
+                            <label class="switch"><input type="checkbox" id="set_notif_appt" onchange="saveToggle('hl_notif_appt', this)"><span class="slider"></span></label>
+                        </div>
+                        <div class="set-row">
+                            <div class="set-info">
+                                <h4>AI Scan Completion</h4>
+                                <p>Notify when diagnostic report is ready.</p>
+                            </div>
+                            <label class="switch"><input type="checkbox" id="set_notif_scan" onchange="saveToggle('hl_notif_scan', this)"><span class="slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ai-engine" class="settings-panel">
+                    <div class="settings-card">
+                        <div class="set-card-header"><h3><i data-lucide="brain-circuit"></i> AI Framework</h3></div>
+                        <div class="set-row">
+                            <div class="set-info">
+                                <h4>Deep Learning Core</h4>
+                                <p>Active diagnostic model.</p>
+                            </div>
+                            <span style="font-size: 11px; font-weight: 800; color: var(--primary); background: rgba(37, 99, 235, 0.1); padding: 5px 12px; border-radius: 8px;">ResNet50 CNN</span>
+                        </div>
+                        <div class="set-row">
+                            <div class="set-info">
+                                <h4>High Sensitivity Mode</h4>
+                                <p>Maximize recall for critical triage.</p>
+                            </div>
+                            <label class="switch"><input type="checkbox" id="set_ai_sens" onchange="saveToggle('hl_ai_sens', this)"><span class="slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="collaboration" class="settings-panel">
+                    <div class="settings-card">
+                        <div class="set-card-header"><h3><i data-lucide="network"></i> Manthan Pixel Hub</h3></div>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px; font-weight: 500;">Administrators with permanent root access.</p>
+                        
+                        <div class="team-grid">
+                            <div class="team-card"><img src="https://api.dicebear.com/7.x/lorelei/svg?seed=Nikhil" alt="Nikhil"><div><h4>Nikhil Rathod</h4><p>Lead and Founder</p><span class="team-badge" style="color: var(--danger); background: rgba(239,68,68,0.1);"><i class="fas fa-crown"></i> ROOT</span></div></div>
+                            <div class="team-card"><img src="https://api.dicebear.com/7.x/lorelei/svg?seed=Yadvi" alt="Yadvi"><div><h4>Yadvi</h4><p>Lead Model Developer</p><span class="team-badge">ADMIN</span></div></div>
+                            <div class="team-card"><img src="https://api.dicebear.com/7.x/lorelei/svg?seed=Shefali" alt="Shefali"><div><h4>Shefali</h4><p>Operations & UI</p><span class="team-badge">ADMIN</span></div></div>
+                            <div class="team-card"><img src="https://api.dicebear.com/7.x/lorelei/svg?seed=Piyush" alt="Piyush"><div><h4>Piyush</h4><p>Backend Architecture</p><span class="team-badge">ADMIN</span></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="premium" class="settings-panel">
+                    <div class="premium-banner">
+                        <div class="premium-info">
+                            <h3><i class="fas fa-crown"></i> HealthLens Premium</h3>
+                            <p>Unlock Automation & Cloud Sync</p>
+                        </div>
+                        <span class="premium-badge">Inactive</span>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="set-card-header"><h3><i data-lucide="credit-card"></i> Subscription</h3></div>
+                        <div class="set-row">
+                            <div class="set-info"><h4>Activate Premium</h4><p>Purchase lifetime access.</p></div>
+                            <button class="action-btn" style="background: #8b5cf6; color: white;" onclick="openQRModal('subscribe')"><i class="fas fa-qrcode"></i> Subscribe</button>
+                        </div>
+                        <div class="set-row">
+                            <div class="set-info"><h4>MongoDB Atlas Sync</h4><p>Auto-backup reports to cloud.</p></div>
+                            <label class="switch"><input type="checkbox" id="set_prem_mongo" onchange="saveToggle('hl_prem_mongo', this)"><span class="slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="privacy" class="settings-panel">
+                    <div class="settings-card" style="border-color: rgba(239, 68, 68, 0.4);">
+                        <div class="set-card-header"><h3><i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i> Danger Zone</h3></div>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px; font-weight: 500;">Wiping your data is irreversible. It deletes all personal details and local archives.</p>
+                        <div class="set-row" style="border: none; padding: 0;">
+                            <div class="set-info"><h4 style="color: var(--danger);">Erase My Data</h4></div>
+                            <button class="action-btn btn-danger" onclick="wipeUserData()"><i class="fas fa-trash-alt"></i> Wipe Account</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="emergency" class="settings-panel">
+                    <div class="settings-card">
+                        <div class="set-card-header"><h3><i class="fas fa-ambulance"></i> Critical Contacts</h3></div>
+                        <div class="set-row">
+                            <div class="set-info"><h4>National Ambulance</h4><p>Call 108 instantly.</p></div>
+                            <button class="action-btn btn-danger" onclick="window.location.href='tel:108'"><i class="fas fa-phone"></i> 108</button>
+                        </div>
+                        <div class="set-row">
+                            <div class="set-info"><h4>General Emergency</h4><p>Call 112 instantly.</p></div>
+                            <button class="action-btn btn-warning" onclick="window.location.href='tel:112'"><i class="fas fa-phone"></i> 112</button>
+                        </div>
+                    </div>
+                    <div class="ngo-banner">
+                        <i class="fas fa-hand-holding-heart"></i>
+                        <div class="ngo-info">
+                            <h4 style="font-size: 1.1rem; margin-bottom: 5px;">Global Health Foundation</h4>
+                            <p style="font-size: 0.85rem; opacity: 0.9;">Help deploy AI screening tools.</p>
+                        </div>
+                        <button class="action-btn" style="background: white; color: var(--success); margin-left: auto;" onclick="openQRModal('donate')">Donate</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script type="text/javascript">
+        function googleTranslateElementInit() { new google.translate.TranslateElement({pageLanguage: 'en', autoDisplay: false}, 'google_translate_element'); }
+        function changeLanguage(langCode) {
+            const selectField = document.querySelector('select.goog-te-combo');
+            if (selectField) { selectField.value = langCode; selectField.dispatchEvent(new Event('change')); showToast(`Language translated.`, 'success'); } 
+            else { showToast('Translation engine initializing...', 'error'); }
+        }
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <script src="global.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA90dg3eiX0aSqDATaU2ZdR-G10-elrva0",
+            authDomain: "healthlens-5b6d9.firebaseapp.com",
+            projectId: "healthlens-5b6d9"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.logoutUser = function() {
+            signOut(auth).then(() => {
+                localStorage.removeItem('healthlens_logged_in');
+                localStorage.removeItem('activeClinician');
+                window.location.href = 'index.html'; 
+            }).catch((err) => console.error(err));
+        };
+    </script>
+
+    <script>
+        const toastSound = new Audio('https://actions.google.com/sounds/v1/ui/message_notification.ogg');
+
+        function showToast(message, type = 'success') {
+            const box = document.getElementById('toastContainer');
+            if(!box) return;
+            toastSound.currentTime = 0;
+            toastSound.play().catch(e => console.log('Audio blocked'));
+
+            const toast = document.createElement('div');
+            toast.className = `modern-toast ${type}`;
+            const icon = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-triangle"></i>';
+            toast.innerHTML = `${icon} ${message}`;
+            box.appendChild(toast);
+            lucide.createIcons();
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000);
+        }
+
+        // Tab Switcher
+        function switchSettingsTab(tabId, element) {
+            document.querySelectorAll('.set-nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            document.querySelectorAll('.settings-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            // Scroll tab into view on mobile
+            if(window.innerWidth < 968) {
+                element.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'});
+            }
+        }
+
+        function initializeSettingsTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || localStorage.getItem('healthlens_theme');
+            const toggle = document.getElementById('masterThemeToggle');
+            if (toggle) toggle.checked = currentTheme === 'dark';
+        }
+
+        function toggleGlobalThemeFromSettings() {
+            const isDark = document.getElementById('masterThemeToggle').checked;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            localStorage.setItem('healthlens_theme', isDark ? 'dark' : 'light');
+            showToast('Interface theme updated.', 'success');
+        }
+
+        const defaultToggles = ['set_notif_appt', 'set_notif_scan', 'set_ai_sens', 'set_prem_mongo'];
+        function initToggles() {
+            defaultToggles.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    const saved = localStorage.getItem(id.replace('set_', 'hl_'));
+                    el.checked = saved === null ? true : saved === 'true';
+                }
+            });
+        }
+
+        function saveToggle(key, element) {
+            localStorage.setItem(key, element.checked);
+            showToast(`Preference saved successfully.`, 'success');
+        }
+
+        let qrTimerInterval;
+        function openQRModal(type) {
+            const overlay = document.getElementById('qrOverlay');
+            const contentBox = document.getElementById('qrContentBox');
+            const successBox = document.getElementById('qrSuccessBox');
+            const title = document.getElementById('qrTitle');
+            const desc = document.getElementById('qrDesc');
+            const timerDisplay = document.getElementById('qrTimerDisplay');
+            const closeBtn = document.getElementById('qrCloseBtn');
+            
+            contentBox.style.display = 'block'; successBox.style.display = 'none'; closeBtn.style.display = 'flex';
+            clearInterval(qrTimerInterval);
+
+            let timeLeft = type === 'donate' ? 300 : 30;
+            if (type === 'donate') {
+                title.innerText = "Support Our Mission";
+                desc.innerText = "Scan to donate to the Global Health Foundation.";
+            } else {
+                title.innerText = "Premium Activation";
+                desc.innerText = "Scan to purchase lifetime access. Awaiting payment...";
+                closeBtn.style.display = 'none'; // Lock them in
+            }
+
+            qrTimerInterval = setInterval(() => {
+                const m = Math.floor(timeLeft / 60); const s = timeLeft % 60;
+                timerDisplay.innerText = type === 'donate' ? `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `00:${String(s).padStart(2,'0')}`;
+                
+                if(timeLeft <= 0) {
+                    clearInterval(qrTimerInterval);
+                    if(type === 'donate') { closeQRModal(); showToast("Donation window closed.", "error"); }
+                    else {
+                        contentBox.style.display = 'none'; successBox.style.display = 'flex'; closeBtn.style.display = 'flex';
+                        const b = document.querySelector('.premium-badge');
+                        if(b) { b.innerText = "Active"; b.style.background = "var(--success)"; }
+                    }
+                }
+                timeLeft--;
+            }, 1000);
+            overlay.classList.add('active');
+        }
+
+        function closeQRModal() { clearInterval(qrTimerInterval); document.getElementById('qrOverlay').classList.remove('active'); }
+
+        function wipeUserData() {
+            if(confirm("CRITICAL WARNING: This will permanently delete your profile, appointments, and diagnostic reports. Are you absolutely sure?")) {
+                const activeUser = localStorage.getItem('activeClinician') || 'Guest';
+                localStorage.removeItem(`profileData_${activeUser}`);
+                localStorage.removeItem(`doctorBookings_${activeUser}`);
+                localStorage.removeItem(`calendarEvents_${activeUser}`);
+                alert("All your personal data has been eradicated. Logging out.");
+                if(typeof window.logoutUser === 'function') window.logoutUser();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const isLoggedIn = localStorage.getItem('healthlens_logged_in') === 'true';
+            if (!isLoggedIn) { window.location.href = "login.html"; return; }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            initializeSettingsTheme(); initToggles();
+            
+            // Hide Desktop Logout on Mobile JS check
+            if(window.innerWidth < 968) {
+                const dLog = document.getElementById('desktopLogout');
+                if(dLog) dLog.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HealthLens | Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<link rel="apple-touch-icon" href="assets/logo_health_lens_transparent_only_logo.png">
+
+<style>
+    :root{
+        --primary:#2563eb;
+        --bg:#f4f7fe; --card:#ffffff; --text:#0f172a;
+        --muted:#64748b; --success:#10b981; --danger:#ef4444; --accent: #3b82f6;
+        --sidebar:#0f172a; --border: #cbd5e1; --input-bg: #f8fafc;
+        --cal-bg: #e0e7ff;
+        --card-border: #94a3b8; 
+        --shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    [data-theme="dark"] {
+        --bg: #000000; --card: #111111; --text: #f8fafc;
+        --muted: #94a3b8; --sidebar: #050505; --border: #262626; --input-bg: #1a1a1a;
+        --cal-bg: #1e1b4b; --card-border: #334155; 
+        --shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent;}
+    body{font-family:'Inter', sans-serif; background:var(--bg); color:var(--text); transition: 0.3s; height: 100vh; display: flex; overflow: hidden;}
+
+    .sidebar{width:280px; background:var(--sidebar); color:white; padding:40px 25px; display: flex; flex-direction: column; z-index: 100; border-right: 1px solid var(--border);}
+    .sidebar-logo { max-width: 160px; margin-bottom: 50px; }
+    
+    .nav-list { list-style: none; flex-grow: 1; }
+    .nav-item{padding:14px 18px; border-radius:12px; margin-bottom:8px; cursor:pointer; color:#94a3b8; transition: 0.3s; display: flex; align-items: center; gap: 12px; font-weight: 600;}
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; transform: translateX(5px);}
+    .nav-item.active{background:var(--primary); color:white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);}
+
+    .status-dot-container { position: relative; display: flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-right: 10px; }
+    .status-dot-core { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; z-index: 2; transition: 0.3s; }
+    .status-dot-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: var(--danger); opacity: 0.6; z-index: 1; animation: radarPing 2s infinite ease-out; transition: 0.3s; }
+    .sys-hub-online .status-dot-core, .sys-hub-online .status-dot-ring { background: var(--success); }
+    @keyframes radarPing { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.5); opacity: 0; } }
+
+    .dashboard{ display:grid; grid-template-columns: 1fr 400px; flex: 1; overflow: hidden; }
+    .main{padding:40px; overflow-y: auto;}
+    
+    .news-ticker-container { display: flex; align-items: center; background: var(--card); border: 1px solid var(--card-border); border-radius: 50px; padding: 5px 8px; margin-bottom: 25px; box-shadow: var(--shadow); overflow: hidden; position: relative; height: 48px; white-space: nowrap; }
+    .news-ticker-label { background: var(--primary); color: white; padding: 8px 18px; border-radius: 30px; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; z-index: 10; white-space: nowrap; box-shadow: 2px 0 10px rgba(0,0,0,0.2); letter-spacing: 1px; min-width: 150px; transition: opacity 0.3s ease-in-out; }
+    .news-ticker { flex: 1; overflow: hidden; position: relative; margin-left: 15px; white-space: nowrap; display: block; height: 100%;}
+    .news-ticker-content { display: inline-block; white-space: nowrap; animation: tickerScroll 110s linear infinite; font-size: 0.85rem; font-weight: 600; color: var(--text); line-height: 38px; padding-left: 100%; }
+    .news-ticker-content:hover { animation-play-state: paused; cursor: pointer; color: var(--primary); }
+    .news-item { display: inline-block; margin-right: 60px; }
+    .news-source { color: #ef4444; font-weight: 800; margin-right: 8px; } 
+    @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
+    .header-banner{ background: linear-gradient(135deg, var(--primary), #4f46e5); color:white; border-radius:24px; padding:35px 40px; margin-bottom:30px; position: relative; overflow: hidden; box-shadow: var(--shadow);}
+    .header-banner::after { content: ''; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+    
+    .header-action-btn { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.5); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); position: relative; font-size: 1.2rem; }
+    .header-action-btn:hover { background: rgba(255,255,255,0.3); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
+    .noti-dot { position: absolute; top: 10px; right: 12px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--primary); box-shadow: 0 0 5px rgba(239,68,68,0.5); }
+
+    .card{background:var(--card); padding:35px; border-radius:24px; margin-bottom:30px; border: 1px solid var(--card-border); box-shadow: var(--shadow);}
+    .card h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 25px; color: var(--text); display: flex; align-items: center; gap: 10px;}
+    .card h2 i { color: var(--primary); }
+
+    input[type="text"], input[type="time"] { width:100%; padding:14px 20px; margin:10px 0; border-radius:12px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text); outline: none; font-weight: 500; font-size: 14px; }
+    input[type="text"]:focus, input[type="time"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+
+    .symptoms-select-container { position: relative; width: 100%; margin-bottom: 15px; }
+    .symptoms-dropdown { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; z-index: 999; max-height: 250px; overflow-y: auto; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+    .symptoms-dropdown::-webkit-scrollbar { width: 6px; }
+    .symptoms-dropdown::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .symptoms-dropdown.show { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .symptom-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; cursor: pointer; font-weight: 500; padding: 8px 10px; border-radius: 8px; transition: 0.2s;}
+    .symptom-item:hover { background: var(--input-bg); color: var(--primary); }
+
+    .chip-container { display: flex; gap: 8px; margin: 10px 0 20px 0; }
+    .suggestion-chip { background: var(--input-bg); color: var(--muted); padding: 8px 16px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; font-weight: 600; border: 1px solid var(--card-border); transition: 0.2s; }
+    .suggestion-chip:hover { border-color: var(--primary); color: var(--primary); }
+
+    .action-area { display: flex; flex-direction: column; gap: 15px; transition: 0.3s; margin-top: 20px; }
+    .upload-zone { background: var(--input-bg); border-radius: 16px; border: 2px dashed var(--primary); text-align: center; cursor: pointer; transition: 0.3s; min-height: 200px; display: flex; justify-content: center; align-items: center; position: relative; margin-top: 20px; width: 100%; overflow: hidden; }
+    .upload-zone:hover { background: rgba(37, 99, 235, 0.05); }
+    .upload-content { padding: 40px; pointer-events: none; }
+    .upload-content i { font-size: 40px; color: var(--primary); opacity: 0.8; margin-bottom: 10px;}
+    #fileLabel { font-weight: 600; font-size: 14px; color: var(--text); }
+    .upload-zone.has-image { border: none; background: transparent; padding: 0; min-height: auto; display: inline-block; width: auto; max-width: 100%; margin: 20px auto; }
+
+    .image-wrapper { display: none; position: relative; max-width: 100%; height: auto; border-radius: 12px; overflow: hidden; border: 3px solid var(--card-border); --scan-color: #ff3300; --scan-rgb: 255, 51, 0; transition: border-color 0.5s; }
+    .image-wrapper.scan-success { --scan-color: #10b981; --scan-rgb: 16, 185, 129; border-color: #10b981; }
+
+    #imagePreview { display: block; max-height: 500px; max-width: 100%; width: auto; height: auto; object-fit: contain; background: #000; position: relative; z-index: 1;}
+
+    .change-img-btn { display: none; position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.8); color: white; padding: 8px 14px; border-radius: 8px; font-size: 11px; font-weight: 600; z-index: 50; border: 1px solid #333; }
+    .upload-zone.has-image:hover .change-img-btn { display: block; }
+
+    .hud-element { position: absolute; pointer-events: none; opacity: 0; z-index: 20; transition: opacity 0.5s, border-color 0.5s, color 0.5s, text-shadow 0.5s; }
+    .hud-tl { top: 10px; left: 10px; width: 30px; height: 30px; border-top: 3px solid var(--scan-color); border-left: 3px solid var(--scan-color); }
+    .hud-tr { top: 10px; right: 10px; width: 30px; height: 30px; border-top: 3px solid var(--scan-color); border-right: 3px solid var(--scan-color); }
+    .hud-bl { bottom: 10px; left: 10px; width: 30px; height: 30px; border-bottom: 3px solid var(--scan-color); border-left: 3px solid var(--scan-color); }
+    .hud-br { bottom: 10px; right: 10px; width: 30px; height: 30px; border-bottom: 3px solid var(--scan-color); border-right: 3px solid var(--scan-color); }
+
+    .scan-grid { inset: 0; width: 100%; height: 100%; transition: background-image 0.5s; background-image: linear-gradient(rgba(var(--scan-rgb), 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--scan-rgb), 0.2) 1px, transparent 1px); background-size: 40px 40px; }
+    .hud-text { top: 20px; left: 50px; color: var(--scan-color); font-family: 'Share Tech Mono', monospace; font-size: 12px; text-shadow: 0 0 5px var(--scan-color); text-align: left; line-height: 1.5; }
+    .scan-laser { top: 0; left: 0; width: 100%; height: 4px; background: var(--scan-color); box-shadow: 0 0 15px var(--scan-color), 0 20px 40px rgba(var(--scan-rgb), 0.6); transition: background 0.5s, box-shadow 0.5s; z-index: 30; }
+
+    #aiLabelContainer { position: absolute; inset: 0; pointer-events: none; z-index: 25; overflow: hidden;}
+    .ai-label-box { position: absolute; border: 1.5px solid; border-radius: 4px; opacity: 0; animation: aiDetect 1.5s forwards; display: flex; align-items: flex-end; justify-content: center; box-shadow: inset 0 0 10px rgba(255,255,255,0.2); }
+    .ai-label-text { background: rgba(0,0,0,0.7); font-family: 'Share Tech Mono', monospace; font-size: 9px; padding: 2px 5px; border-radius: 3px; transform: translateY(120%); white-space: nowrap; font-weight: bold; }
+    @keyframes aiDetect { 0% { opacity: 0; transform: scale(1.2); } 15% { opacity: 1; transform: scale(1); } 85% { opacity: 1; } 100% { opacity: 0; } }
+
+    .image-wrapper.scanning .hud-element { opacity: 1; }
+    .image-wrapper.scanning .scan-laser { animation: destinySweep 2.5s infinite linear; }
+    .image-wrapper.scanning #imagePreview { filter: contrast(1.5) sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.8); }
+    .image-wrapper.scan-success #imagePreview { filter: contrast(1.2) sepia(0) hue-rotate(0deg) saturate(1) brightness(1); }
+    @keyframes destinySweep { 0% { top: -5%; } 100% { top: 105%; } }
+
+    .btn-container { text-align: center; margin-top: 25px; display: none; }
+    .run-btn { background:var(--primary); color:white; border:none; padding:16px 30px; border-radius:12px; font-weight:800; cursor:pointer; font-size: 1.1rem; transition: 0.3s; display: inline-flex; justify-content: center; align-items: center; gap: 12px; letter-spacing: 1px; width: 100%; max-width: 400px;}
+    .run-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4); }
+    .run-btn.ready { background: linear-gradient(135deg, #10b981, #059669); animation: glowingPulse 2s infinite; }
+    @keyframes glowingPulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); } 70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+
+    .right{padding:30px 25px; background: var(--card); border-left: 1px solid var(--card-border); overflow-y: auto; box-shadow: -5px 0 15px rgba(0,0,0,0.02);}
+    
+    .profile-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; cursor: pointer; transition: 0.2s; padding: 12px; border-radius: 12px; border: 1px solid transparent;}
+    .profile-header:hover { background: var(--input-bg); border-color: var(--card-border); transform: translateX(5px); }
+    .profile-header .img-container { width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--primary); overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); flex-shrink: 0;}
+    .profile-header img { width: 100%; height: 100%; object-fit: cover; }
+
+    .prof-tag{ background: var(--input-bg); padding: 15px 20px; border-radius: 14px; margin-bottom: 12px; border: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s;}
+    .prof-tag:hover { transform: translateY(-2px); border-color: var(--primary); box-shadow: var(--shadow); }
+    .tag-info { display: flex; flex-direction: column; }
+    .prof-tag span { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;}
+    .prof-tag b { font-size: 0.9rem; color: var(--text); }
+    .prof-tag i.main-icon { color: var(--primary); opacity: 0.5; font-size: 18px; }
+    .missing-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+
+    .cal-wrapper { position: relative; overflow: hidden; background: var(--cal-bg); padding: 25px; border-radius: 20px; margin-top: 20px; border: 1px solid var(--card-border); transition: 0.3s;}
+    .cal-content { position: relative; z-index: 2; } 
+    #calConfettiCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; margin-top: 15px;}
+    .cal-date { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-radius: 10px; position: relative; transition: 0.2s; color: var(--text);}
+    
+    .cal-date.sunday { color: var(--danger) !important; font-weight: 800; }
+    .cal-date.today { background: var(--primary); color: white !important; font-weight: 700; box-shadow: 0 4px 10px rgba(37,99,235,0.3);}
+    .cal-date:hover:not(.today) { background: rgba(255,255,255,0.4); color: var(--primary); }
+    
+    .status-line { width: 5px; height: 5px; border-radius: 50%; position: absolute; bottom: 4px; background: var(--primary); }
+    .status-line.doc-booking { background: var(--success); }
+    
+    .fest-dot { position: absolute; top: 4px; right: 4px; font-size: 7px; }
+    .fest-major { color: var(--danger); } 
+    .fest-minor { color: #f59e0b; } 
+    .fest-cameo { color: #a855f7; font-size: 9px; } 
+
+    .event-editor { margin-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 20px; display: none; }
+    .event-btn { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; margin-top: 10px; cursor: pointer; font-weight: bold;}
+
+    .event-item-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;}
+    .delete-btn { background: transparent; color: var(--danger); border: none; cursor: pointer; font-size: 14px; opacity: 0.6; transition: 0.2s; padding: 5px; border-radius: 4px;}
+    .delete-btn:hover { opacity: 1; transform: scale(1.1); background: rgba(239, 68, 68, 0.1); }
+
+    /* CUTE CLOCK MODAL */
+    #clockBackdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 999; transition: 0.3s; }
+    #clockModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 340px; background: var(--card); border-radius: 24px; border: 1px solid var(--card-border); box-shadow: 0 25px 50px rgba(0,0,0,0.3); z-index: 1000; overflow: hidden; animation: popIn 0.3s ease; }
+    .clock-header { background: var(--input-bg); padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 800; border-bottom: 1px solid var(--card-border); font-size: 1.1rem; }
+    .clock-tabs { display: flex; cursor: pointer; }
+    .c-tab { flex: 1; text-align: center; padding: 12px; font-size: 13px; font-weight: 700; color: var(--muted); border-bottom: 3px solid transparent; transition: 0.2s;}
+    .c-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(37, 99, 235, 0.05); }
+    .clock-body { padding: 30px; text-align: center; }
+    .clock-display { font-family: 'Share Tech Mono', monospace; font-size: 2.8rem; color: var(--primary); font-weight: bold; margin: 10px 0 20px 0; letter-spacing: 2px;}
+    .clock-inputs { display: none; gap: 8px; justify-content: center; margin-bottom: 20px; }
+    .clock-inputs input { width: 60px; text-align: center; font-size: 1.4rem; padding: 8px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text); font-weight: bold;}
+    .clock-btns { display: flex; gap: 10px; }
+    .clock-btns button { flex: 1; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; font-size: 1rem;}
+    .c-start { background: var(--success); } .c-start:hover { filter: brightness(1.1); }
+    .c-stop { background: var(--danger); } .c-stop:hover { filter: brightness(1.1); }
+    .c-reset { background: var(--muted); } .c-reset:hover { filter: brightness(1.1); }
+
+    #alertOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+    .alert-box { background: var(--card); padding: 40px; border-radius: 24px; text-align: center; max-width: 400px; border: 2px solid var(--danger); box-shadow: 0 20px 50px rgba(239,68,68,0.3); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .modern-toast { background: var(--card); color: var(--text); padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 14px; border-left: 4px solid var(--primary); transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid var(--card-border); }
+    .modern-toast.show { transform: translateX(0); }
+    .modern-toast.success { border-left-color: var(--success); }
+    .modern-toast.error { border-left-color: var(--danger); }
+
+    /* ==========================================
+       🚀 NUCLEAR MOBILE OVERRIDE 
+       ========================================== */
+    @media (max-width: 968px) {
+        body { padding-bottom: 85px !important; }
+        .dashboard { grid-template-columns: 1fr !important; display: flex !important; flex-direction: column !important; overflow-y: auto !important; }
+        
+        .sidebar {
+            position: fixed !important;
+            bottom: 0 !important;
+            top: auto !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 75px !important;
+            padding: 10px 5px !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            background: var(--card) !important;
+            border-top: 1px solid var(--card-border) !important;
+            border-radius: 20px 20px 0 0 !important;
+            z-index: 10000 !important;
+        }
+        
+        .sidebar-logo, .sidebar h2, .sidebar > div, .nav-item[onclick*="logoutUser"] { display: none !important; }
+        
+        .nav-list { display: flex !important; flex-direction: row !important; width: 100% !important; justify-content: space-around !important; padding: 0 !important; margin: 0 !important; }
+        
+        .nav-item { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; padding: 5px !important; margin: 0 !important; width: 60px !important; background: transparent !important;}
+        .nav-item i { font-size: 20px !important; margin: 0 !important; }
+        .nav-text { font-size: 0.65rem !important; display: block !important; margin: 0 !important; text-align: center; }
+        .nav-item.active { background: transparent !important; color: var(--primary) !important; box-shadow: none !important; }
+        .nav-item.active i { transform: translateY(-3px); }
+
+        .main { padding: 15px !important; overflow: visible !important;}
+        .right { padding: 15px !important; border-left: none !important; margin-bottom: 90px !important; overflow: visible !important;}
+        .card { padding: 20px !important; }
+        .header-banner { padding: 25px 20px !important; }
+        .symptoms-dropdown.show { grid-template-columns: 1fr !important; }
+        #clockModal { width: 90% !important; }
+    }
+</style>
+</head>
+<body id="app-root" data-theme="light">
+
+<div class="toast-container" id="toastBox"></div>
+
+<aside class="sidebar">
+    <img src="assets/logo_health_lens_transparent_both_text_and_logo.png" alt="HealthLens" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+    <h2 style="display:none; color:var(--accent); margin-bottom:50px; font-weight: 800;"><i class="fas fa-lungs"></i> HealthLens</h2>
+    
+    <ul class="nav-list">
+        <li class="nav-item active"><i class="fas fa-th-large"></i> <span class="nav-text">Dashboard</span></li>
+        <li class="nav-item" onclick="location.href='Doctor.html'"><i class="fas fa-user-md"></i> <span class="nav-text">Schedule</span></li>
+        <li class="nav-item" onclick="location.href='report.html'"><i class="fas fa-file-medical-alt"></i> <span class="nav-text">Archive</span></li>
+        <li class="nav-item" onclick="location.href='profile.html'"><i class="fas fa-user"></i> <span class="nav-text">Profile</span></li>
+        <li class="nav-item" onclick="toggleClockModal()" style="color: var(--primary);"><i class="fas fa-hourglass-half fa-spin"></i> <span class="nav-text">Timer</span></li>
+        <li class="nav-item" onclick="location.href='setting.html'"><i class="fas fa-cog"></i> <span class="nav-text">Settings</span></li>
+        
+        <li class="nav-item" onclick="logoutUser()" style="color: var(--danger); margin-top: 15px;">
+            <i class="fas fa-sign-out-alt"></i> <span class="nav-text">Sign Out</span>
+        </li>
+    </ul>
+    
+    <div style="margin-top: auto; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px;">
+        <span style="font-size: 10px; opacity: 0.6; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">System Hub</span><br>
+        <div style="display: flex; align-items: center; margin-top: 5px;" id="sysHubContainer">
+            <div class="status-dot-container">
+                <div class="status-dot-ring"></div>
+                <div class="status-dot-core"></div>
+            </div>
+            <b id="serverStatus" style="color:var(--danger); font-size: 12px; z-index: 10;">OFFLINE</b>
+        </div>
+    </div>
+</aside>
+
+<div id="clockBackdrop" onclick="toggleClockModal()"></div>
+<div id="clockModal">
+    <div class="clock-header">
+        <span><i class="fas fa-stopwatch" style="color: var(--primary);"></i> Medical Timer</span>
+        <i class="fas fa-times" style="cursor:pointer; color:var(--muted); font-size: 1.2rem;" onclick="toggleClockModal()"></i>
+    </div>
+    <div class="clock-tabs">
+        <div class="c-tab active" id="tabStopwatch" onclick="switchClockMode('stopwatch')">Stopwatch</div>
+        <div class="c-tab" id="tabTimer" onclick="switchClockMode('timer')">Countdown</div>
+    </div>
+    <div class="clock-body">
+        <div class="clock-inputs" id="clockInputs">
+            <input type="number" id="t-hr" placeholder="HH" min="0" max="23">
+            <span style="font-size: 1.5rem; font-weight: bold; padding-top: 5px;">:</span>
+            <input type="number" id="t-min" placeholder="MM" min="0" max="59">
+            <span style="font-size: 1.5rem; font-weight: bold; padding-top: 5px;">:</span>
+            <input type="number" id="t-sec" placeholder="SS" min="0" max="59">
+        </div>
+        <div class="clock-display" id="clockDisplay">00:00:00:00</div>
+        <div class="clock-btns">
+            <button class="c-start" onclick="startClock()"><i class="fas fa-play"></i> Start</button>
+            <button class="c-stop" onclick="stopClock()"><i class="fas fa-pause"></i> Stop</button>
+            <button class="c-reset" onclick="resetClock()"><i class="fas fa-redo"></i> Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard">
+    <main class="main">
+        
+        <div class="news-ticker-container">
+            <div class="news-ticker-label" id="dynamicTickerLabel">
+                <i class="fas fa-bolt" style="color: #fbbf24;"></i> HEALTH NEWS
+            </div>
+            <div class="news-ticker">
+                <div class="news-ticker-content" id="newsTickerContent">
+                    Loading latest health headlines...
+                </div>
+            </div>
+        </div>
+
+        <div class="header-banner">
+            <div style="display:flex; justify-content:space-between; align-items:center; position: relative; z-index: 2;">
+                <div>
+                    <h1 id="greeting" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 5px;">Loading...</h1>
+                    <p id="dateTime" style="font-size: 0.9rem; font-weight: 500; opacity: 0.9;"></p>
+                </div>
+                <button class="header-action-btn" onclick="openNotifications()" title="View Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="noti-dot"></span>
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-microscope"></i> Diagnostic Engine</h2>
+            
+            <input type="text" id="patientName" placeholder="Full Patient Name">
+            <div class="chip-container">
+                <span class="suggestion-chip" onclick="setPatient()">Set Self (Profile)</span>
+                <span class="suggestion-chip" onclick="setPatient('Emergency Patient')">Emergency</span>
+            </div>
+
+            <div class="symptoms-select-container">
+                <input type="text" id="symptomsInput" placeholder="Select Associated Symptoms..." readonly onclick="toggleSymptoms(event)">
+                <div class="symptoms-dropdown" id="symptomsDropdown"></div>
+            </div>
+
+            <div style="text-align: center;">
+                <div class="upload-zone" id="dropZone" onclick="document.getElementById('xrayFile').click()">
+                    
+                    <div class="upload-content" id="uploadContent">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p id="fileLabel">Click or Drag X-Ray Image Here</p>
+                        <p id="fileSubLabel">Supports JPG, PNG (Max 5MB)</p>
+                    </div>
+                    
+                    <div class="image-wrapper" id="imageWrapper">
+                        <img id="imagePreview" src="" alt="X-Ray Preview">
+                        <div class="hud-element hud-tl"></div>
+                        <div class="hud-element hud-tr"></div>
+                        <div class="hud-element hud-bl"></div>
+                        <div class="hud-element hud-br"></div>
+                        <div class="hud-element scan-grid"></div>
+                        <div class="hud-element hud-text" id="hudText">DESTINY DIAGNOSTIC<br>> ENERGY: 88%<br>> INITIATING...</div>
+                        
+                        <div id="aiLabelContainer"></div>
+                        
+                        <div class="hud-element scan-laser"></div>
+                    </div>
+
+                    <div class="change-img-btn" id="changeImgBtn" onclick="event.stopPropagation(); document.getElementById('xrayFile').click();"><i class="fas fa-exchange-alt"></i> Change Image</div>
+                    <input type="file" id="xrayFile" hidden accept="image/png, image/jpeg" onchange="handleFileSelect(this)">
+                </div>
+            </div>
+            
+            <div class="btn-container" id="btnContainer">
+                <button class="run-btn" id="runAnalysisBtn" onclick="runDiagnosticSequence()">
+                    <i class="fas fa-bolt"></i> RUN RADIOGRAPHIC ANALYSIS
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <aside class="right">
+        <div class="profile-header" onclick="location.href='profile.html'" title="Edit Profile Details">
+            <div class="img-container"><img id="dash-avatar" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" referrerpolicy="no-referrer"></div>
+            <div>
+                <h3 id="userName" style="font-size: 1.1rem; font-weight: 700;">Loading...</h3>
+                <p id="userLoc" style="font-size: 0.8rem; color: var(--muted); font-weight: 500; margin-top: 2px;"><i class="fas fa-map-marker-alt" style="color: var(--primary);"></i> Network Access</p>
+            </div>
+            <i class="fas fa-chevron-right" style="margin-left: auto; color: var(--border);"></i>
+        </div>
+
+        <div class="prof-tag" onclick="location.href='profile.html'" title="Click to edit profile">
+            <div class="tag-info">
+                <span>Patient ID</span> 
+                <b id="patientIdDisplay">Loading...</b>
+            </div>
+            <i class="fas fa-id-card main-icon"></i>
+        </div>
+        
+        <div class="prof-tag" onclick="location.href='profile.html'" title="Click to edit profile">
+            <div class="tag-info">
+                <span>Primary Conditions</span> 
+                <b id="condDisplay">Loading...</b>
+            </div>
+            <i class="fas fa-notes-medical main-icon"></i>
+        </div>
+        
+        <div class="prof-tag" onclick="location.href='profile.html'" title="Click to edit profile">
+            <div class="tag-info">
+                <span>Vitals Summary</span> 
+                <b id="vitalsDisplay">Loading...</b>
+            </div>
+            <i class="fas fa-heartbeat main-icon" style="color: var(--danger);"></i>
+        </div>
+
+        <div class="cal-wrapper" id="calWrapper">
+            <canvas id="calConfettiCanvas"></canvas>
+            
+            <div class="cal-content">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <button onclick="changeMonth(-1)" style="border:none; background:none; cursor:pointer; color:var(--text); font-size: 14px;"><i class="fas fa-chevron-left"></i></button>
+                    <b id="calMonth" style="font-size: 1rem; font-weight: 800; color:var(--text);">Month Year</b>
+                    <button onclick="changeMonth(1)" style="border:none; background:none; cursor:pointer; color:var(--text); font-size: 14px;"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="cal-grid" id="calendarGrid"></div>
+                
+                <div class="event-editor" id="eventEditor">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                        <p style="font-size: 0.8rem; font-weight: 800; color: var(--primary);" id="targetDate"></p>
+                        <i class="fas fa-times" style="cursor:pointer; color:var(--danger); font-size:12px;" onclick="resetCalendar()"></i>
+                    </div>
+                    <input type="text" id="eventTitle" placeholder="Add Task / Note...">
+                    <button onclick="saveEvent()" class="event-btn">Save Note</button>
+                    <div id="eventDisplay" style="margin-top:15px; display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<div id="alertOverlay">
+    <div class="alert-box">
+        <i class="fas fa-exclamation-triangle" style="font-size: 50px; color: var(--danger); margin-bottom: 20px;"></i>
+        <h2 style="color: var(--text); margin-bottom: 10px;">Appointment Alert!</h2>
+        <p id="alertMsg" style="color: var(--muted); margin-bottom: 25px; line-height: 1.5; font-size: 15px;">You have an upcoming appointment.</p>
+        <button class="run-btn" style="padding: 12px; width: 100%; border-radius: 12px;" onclick="closeAlert()">Acknowledge</button>
+    </div>
+</div>
+
+<script src="global.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA90dg3eiX0aSqDATaU2ZdR-G10-elrva0",
+    authDomain: "healthlens-5b6d9.firebaseapp.com",
+    projectId: "healthlens-5b6d9",
+    storageBucket: "healthlens-5b6d9.firebasestorage.app",
+    messagingSenderId: "43708270749",
+    appId: "1:43708270749:web:4d2f1b476dbc159f426c74"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  onAuthStateChanged(auth, async (user) => {
+      if (user) {
+          const activeUser = localStorage.getItem('activeClinician') || user.displayName || "Guest";
+          const storageKey = `profileData_${activeUser}`;
+          let profileData = JSON.parse(localStorage.getItem(storageKey)) || {};
+          
+          if (user.photoURL) {
+              localStorage.setItem('healthlens_user_avatar', user.photoURL);
+              profileData.avatar = user.photoURL;
+          }
+          
+          const docRef = doc(db, "clinicians", user.uid);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+              const data = docSnap.data();
+              profileData.name = data.firstName + (data.lastName ? " " + data.lastName : "");
+              if (data.email) profileData.email = data.email;
+              if (data.phone) profileData.mobile = data.phone;
+              if (data.profileImgBase64) profileData.avatar = data.profileImgBase64;
+          } else {
+              profileData.name = user.displayName || "Clinician";
+              if (user.email) profileData.email = user.email;
+          }
+          
+          localStorage.setItem(storageKey, JSON.stringify(profileData));
+          
+          if (typeof window.loadRealProfileData === 'function') window.loadRealProfileData();
+          if (typeof window.updateGreetings === 'function') window.updateGreetings();
+      }
+  });
+
+  window.logoutUser = function() {
+      signOut(auth).then(() => {
+          localStorage.removeItem('healthlens_logged_in');
+          localStorage.removeItem('activeClinician');
+          localStorage.removeItem('healthlens_role');
+          localStorage.removeItem('healthlens_user_avatar');
+          window.location.href = 'index.html'; 
+      }).catch((error) => {
+          console.error("Error signing out: ", error);
+      });
+  };
+</script>
+
+<script>
+    const state = { user: null, file: null, symptoms: [], apiStatus: "idle" };
+
+    const toastSound = new Audio('https://actions.google.com/sounds/v1/ui/message_notification.ogg');
+    window.showToast = function(message, type = 'success') {
+        const box = document.getElementById('toastBox'); 
+        if(!box) return; 
+        toastSound.currentTime = 0; 
+        toastSound.play().catch(e => console.log('Audio disabled by browser policy')); 
+        const toast = document.createElement('div'); 
+        toast.className = `modern-toast ${type}`; 
+        const icon = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-triangle"></i>'; 
+        toast.innerHTML = `${icon} ${message}`; 
+        box.appendChild(toast); 
+        setTimeout(() => toast.classList.add('show'), 10); 
+        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000); 
+    }
+
+    window.openNotifications = function() { window.showToast("No new alerts. Your system is up to date.", "success"); }
+
+    let currentLabelType = 0;
+    setInterval(() => {
+        const labelEl = document.getElementById('dynamicTickerLabel'); 
+        if(!labelEl) return; 
+        labelEl.style.opacity = 0; 
+        setTimeout(() => { currentLabelType = (currentLabelType + 1) % 4; updateLabelContent(); labelEl.style.opacity = 1; }, 500); 
+    }, 4000);
+
+    setInterval(() => { if (currentLabelType === 3) updateLabelContent(); }, 1000);
+
+    function updateLabelContent() {
+        const labelEl = document.getElementById('dynamicTickerLabel'); 
+        if(!labelEl) return; 
+        if(currentLabelType === 0) labelEl.innerHTML = `<i class="fas fa-bolt" style="color: #fbbf24;"></i> HEALTH NEWS`; 
+        else if(currentLabelType === 1) labelEl.innerHTML = `<i class="fas fa-circle" style="color: var(--danger); animation: pulse 1.5s infinite;"></i> LIVE UPDATES`; 
+        else if(currentLabelType === 2) labelEl.innerHTML = `<i class="fas fa-calendar-day"></i> ${new Date().toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'})}`; 
+        else if(currentLabelType === 3) { 
+            const d = new Date(); 
+            labelEl.innerHTML = `<i class="fas fa-clock" style="color: #60a5fa;"></i> ${String(d.getHours()).padStart(2,'0')} : ${String(d.getMinutes()).padStart(2,'0')} : ${String(d.getSeconds()).padStart(2,'0')}`; 
+        } 
+    }
+
+    window.fetchHealthNews = async function() {
+        const tickerContent = document.getElementById('newsTickerContent'); 
+        if(!tickerContent) return; 
+        let newsHtml = ''; 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        try { 
+            const res = await fetch('https://saurav.tech/NewsAPI/top-headlines/category/health/in.json', { signal: controller.signal }); 
+            clearTimeout(timeoutId);
+            const data = await res.json(); 
+            if (data.articles && data.articles.length > 0) { 
+                data.articles.slice(0, 10).forEach(article => { 
+                    let source = article.source.name || "Global Health"; 
+                    newsHtml += `<span class="news-item"><span class="news-source">[${source}]</span> ${article.title} <i class="fas fa-ambulance" style="margin: 0 15px; color: var(--primary); font-size: 1.2rem;"></i></span>`; 
+                }); 
+            } else { throw new Error("No articles"); } 
+        } catch (err) { 
+            const fallbacks = [ { src: "WHO", text: "New global guidelines announced for respiratory health protocols." }, { src: "MedTech Daily", text: "Breakthrough in AI diagnostics reduces X-Ray scanning times by 40% in Indian hospitals." }, { src: "Health Ministry", text: "Nationwide telemedicine expansion launched for rural areas." } ]; 
+            fallbacks.forEach(f => { newsHtml += `<span class="news-item"><span class="news-source">[${f.src}]</span> ${f.text} <i class="fas fa-ambulance" style="margin: 0 15px; color: var(--primary); font-size: 1.2rem;"></i></span>`; }); 
+        } 
+        tickerContent.innerHTML = newsHtml + newsHtml; 
+    }
+
+    const alertSound = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
+    const timerEndSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+    let clockInterval; let clockMs = 0; let isTimer = false;
+
+    window.toggleClockModal = function() {
+        const modal = document.getElementById('clockModal'); const backdrop = document.getElementById('clockBackdrop'); 
+        if(modal.style.display === 'block') { modal.style.display = 'none'; backdrop.style.display = 'none'; } 
+        else { modal.style.display = 'block'; backdrop.style.display = 'block'; } 
+    }
+
+    window.switchClockMode = function(mode) {
+        isTimer = mode === 'timer'; 
+        document.getElementById('tabStopwatch').classList.toggle('active', !isTimer); 
+        document.getElementById('tabTimer').classList.toggle('active', isTimer); 
+        document.getElementById('clockInputs').style.display = isTimer ? 'flex' : 'none'; 
+        window.resetClock(); 
+    }
+
+    window.formatClock = function(msTotal) {
+        let hr = Math.floor(msTotal / 3600000); let min = Math.floor((msTotal % 3600000) / 60000); 
+        let sec = Math.floor((msTotal % 60000) / 1000); let ms = Math.floor((msTotal % 1000) / 10); 
+        return `${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}:${String(ms).padStart(2,'0')}`; 
+    }
+
+    window.startClock = function() {
+        if(clockInterval) return; 
+        if(isTimer && clockMs === 0) { 
+            let h = parseInt(document.getElementById('t-hr').value || 0); let m = parseInt(document.getElementById('t-min').value || 0); let s = parseInt(document.getElementById('t-sec').value || 0); 
+            clockMs = (h*3600000) + (m*60000) + (s*1000); 
+            if(clockMs === 0) return window.showToast("Set a time first!", "error"); 
+        } 
+        let lastTime = Date.now(); 
+        clockInterval = setInterval(() => { 
+            let now = Date.now(); let delta = now - lastTime; lastTime = now; 
+            if(isTimer) { 
+                clockMs -= delta; 
+                if(clockMs <= 0) { clockMs = 0; window.stopClock(); timerEndSound.play(); window.showToast("Timer Finished!", "success"); } 
+            } else { clockMs += delta; } 
+            document.getElementById('clockDisplay').innerText = window.formatClock(clockMs); 
+        }, 10); 
+    }
+
+    window.stopClock = function() { clearInterval(clockInterval); clockInterval = null; }
+    window.resetClock = function() { window.stopClock(); clockMs = 0; document.getElementById('clockDisplay').innerText = "00:00:00:00"; }
+
+    window.loadRealProfileData = function() {
+        const activeUser = localStorage.getItem("activeClinician"); const role = localStorage.getItem("healthlens_role"); 
+        const storageKey = activeUser ? `profileData_${activeUser}` : "profileData_guest"; 
+        const p = JSON.parse(localStorage.getItem(storageKey)) || {}; 
+        
+        document.getElementById("userName").innerText = p.name || activeUser || "Guest User"; 
+        if(!p.name && !activeUser) { document.getElementById("userName").innerHTML += ` <a href="profile.html" style="font-size:10px; color:var(--primary); text-decoration:none;">(Update Profile)</a>`; } 
+        
+        const savedAvatar = localStorage.getItem('healthlens_user_avatar') || p.avatar; 
+        if(savedAvatar && savedAvatar !== "null") { document.getElementById("dash-avatar").src = savedAvatar; } 
+        else { document.getElementById("dash-avatar").src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; } 
+        
+        if (p.chronic && p.chronic !== "None" && p.chronic !== "--") document.getElementById("condDisplay").innerText = p.chronic; 
+        else document.getElementById("condDisplay").innerHTML = '<span class="missing-badge"><i class="fas fa-exclamation-circle"></i> Needs Update</span>'; 
+        
+        if (p.blood && p.weight && p.pulse && p.blood !== "--" && p.weight !== "") document.getElementById("vitalsDisplay").innerText = `${p.blood} | ${p.weight} kg | ${p.pulse}`; 
+        else document.getElementById("vitalsDisplay").innerHTML = '<span class="missing-badge"><i class="fas fa-exclamation-circle"></i> Needs Update</span>'; 
+        
+        if (role === 'admin' && activeUser) { 
+            const adminIds = { 'Nikhil': 'CL-200328', 'Yadvi': 'CL-YADVI30', 'Shefali': 'CL-SHEF09', 'Piyush': 'CL-PIY123' };
+            document.getElementById('patientIdDisplay').innerText = adminIds[activeUser] || `CL-${activeUser.toUpperCase()}`; 
+        } else { 
+            if (!p.patientId) { p.patientId = `PX-${Math.floor(1000 + Math.random() * 9000)}`; localStorage.setItem(storageKey, JSON.stringify(p)); } 
+            document.getElementById('patientIdDisplay').innerText = p.patientId; 
+        } 
+    }
+
+    window.setPatient = function(overrideName = null) {
+        const activeUser = localStorage.getItem("activeClinician"); const storageKey = activeUser ? `profileData_${activeUser}` : "profileData_guest"; 
+        const p = JSON.parse(localStorage.getItem(storageKey)) || {}; 
+        if (overrideName) document.getElementById("patientName").value = overrideName; 
+        else { if(p.name) document.getElementById("patientName").value = p.name; else window.showToast("Profile name not set! Update your profile first.", "error"); } 
+    }
+
+    const symptomsData = ["Cough", "Chest Pain", "Shortness of Breath", "Fever", "Fatigue", "Wheezing", "Bloody Sputum", "Night Sweats"];
+    window.toggleSymptoms = function(e) { e.stopPropagation(); document.getElementById('symptomsDropdown').classList.toggle('show'); }
+
+    document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('symptomsDropdown'); 
+        if (dropdown && !dropdown.contains(e.target) && e.target.id !== 'symptomsInput') dropdown.classList.remove('show'); 
+    });
+
+    window.initSymptoms = function() {
+        const container = document.getElementById('symptomsDropdown'); if(!container) return; 
+        symptomsData.forEach(s => { 
+            const div = document.createElement('label'); div.className = 'symptom-item'; 
+            div.innerHTML = `<input type="checkbox" value="${s}" onchange="updateSymptomsArray()"> <span>${s}</span>`; 
+            container.appendChild(div); 
+        }); 
+    }
+
+    window.updateSymptomsArray = function() {
+        const checkboxes = document.querySelectorAll('.symptom-item input[type="checkbox"]'); 
+        state.symptoms = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value); 
+        document.getElementById('symptomsInput').value = state.symptoms.length > 0 ? state.symptoms.join(', ') : ''; 
+    }
+
+    const dropZone = document.getElementById('dropZone');
+    if(dropZone) {
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.background = 'rgba(37, 99, 235, 0.1)'; }); 
+        dropZone.addEventListener('dragleave', () => { dropZone.style.background = ''; }); 
+        dropZone.addEventListener('drop', (e) => { 
+            e.preventDefault(); dropZone.style.background = ''; 
+            if (e.dataTransfer.files.length) { document.getElementById('xrayFile').files = e.dataTransfer.files; window.handleFileSelect(document.getElementById('xrayFile')); } 
+        }); 
+    }
+
+    window.handleFileSelect = function(input) {
+        const file = input.files[0]; 
+        if (!file) return; 
+        
+        if (!file.type.startsWith("image/")) { 
+            input.value = ""; return showToast("Only image files allowed (JPG, PNG)", "error"); 
+        } 
+        
+        const maxSize = 5 * 1024 * 1024; 
+        if (file.size > maxSize) { 
+            input.value = ""; return showToast("File too large. Max 5MB allowed.", "error"); 
+        } 
+        
+        state.file = file; 
+        const reader = new FileReader(); 
+        reader.onload = function(e) { 
+            document.getElementById('imagePreview').src = e.target.result; 
+            document.getElementById('uploadContent').style.display = 'none'; 
+            document.getElementById('imageWrapper').style.display = 'block'; 
+            document.getElementById('dropZone').classList.add('has-image'); 
+            document.getElementById('btnContainer').style.display = 'block'; 
+            document.getElementById('runAnalysisBtn').classList.add('ready'); 
+        } 
+        reader.readAsDataURL(file); 
+    }
+
+    const medicalLabels = ["1st Anterior Rib", "2nd Posterior Rib", "Right Clavicle", "Scapula", "T4", "T6", "T8", "L1", "Pulmonary Artery", "Aortic Arch", "Cardiac Silhouette"];
+    let labelInterval;
+    window.spawnAILabel = function(wrapper) {
+        const box = document.createElement('div'); box.className = 'ai-label-box'; 
+        const width = 30 + Math.random() * 50; const height = 30 + Math.random() * 50; 
+        const top = 10 + Math.random() * 70; const left = 10 + Math.random() * 70; 
+        const isSuccess = wrapper.classList.contains('scan-success'); 
+        const color = isSuccess ? '#10b981' : '#00e5ff'; 
+        box.style.width = width + 'px'; box.style.height = height + 'px'; box.style.top = top + '%'; box.style.left = left + '%'; box.style.borderColor = color; 
+        const text = document.createElement('div'); text.className = 'ai-label-text'; text.style.color = color; 
+        text.innerText = medicalLabels[Math.floor(Math.random() * medicalLabels.length)]; 
+        box.appendChild(text); document.getElementById('aiLabelContainer').appendChild(box); 
+        setTimeout(() => box.remove(), 1500); 
+    }
+
+    const calCanvas = document.getElementById('calConfettiCanvas');
+    let calConfetti;
+    if(typeof confetti !== 'undefined' && calCanvas) { calConfetti = confetti.create(calCanvas, { resize: true, useWorker: true }); }
+
+    window.fireFestivalMagic = function(title) {
+        if (!calConfetti) return; 
+        const end = Date.now() + 3000; const o = { y: 0.8 }; 
+        if (title.includes("Diwali")) { 
+            const shapes = ['🪔', '✨', '🎇'].map(e => confetti.shapeFromText({ text: e, scalar: 3 })); 
+            calConfetti({ particleCount: 50, spread: 100, origin: o, shapes: shapes }); 
+            calConfetti({ particleCount: 100, spread: 120, origin: o, colors: ['#f59e0b', '#fbbf24', '#ffffff'] }); 
+        } 
+    }
+
+    let displayDate = new Date(); let selectedDate = new Date();
+    const getActiveUserStr = () => localStorage.getItem("activeClinician") || "Guest";
+    const getCalKey = () => `calendarEvents_${getActiveUserStr()}`;
+    const getBookingKey = () => `doctorBookings_${getActiveUserStr()}`;
+
+    const indianFestivals = {
+        "1-1": { title: "New Year", type: "minor" }, "1-26": { title: "Republic Day", type: "major" }, 
+        "3-24": { title: "World TB Day", type: "minor" }, "4-7": { title: "World Health Day", type: "minor" }, 
+        "7-28": { title: "👑 Nikhil's Day (Founder)", type: "cameo" }, "7-30": { title: "💻 Yadvi's Birthday", type: "cameo" }, 
+        "8-15": { title: "Independence Day", type: "major" }, "10-2": { title: "Gandhi Jayanti", type: "major" }, 
+        "12-25": { title: "Christmas", type: "major" } 
+    };
+
+    window.getDocDateStr = function(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+    window.renderCalendar = function() {
+        const grid = document.getElementById("calendarGrid"); if(!grid) return; 
+        grid.innerHTML = ""; document.getElementById("eventEditor").style.display = "none"; grid.style.display = "grid"; 
+        const d = new Date(displayDate.getFullYear(), displayDate.getMonth(), 1); 
+        document.getElementById("calMonth").innerText = d.toLocaleString('default', { month: 'long', year: 'numeric' }); 
+        ['S','M','T','W','T','F','S'].forEach((day, index) => { 
+            let h = document.createElement("div"); h.style.fontSize="0.7rem"; h.style.fontWeight="800"; h.innerText = day; 
+            if(index === 0) h.style.color = "var(--danger)"; else h.style.color="var(--muted)"; grid.appendChild(h); 
+        }); 
+        for(let i=0; i<d.getDay(); i++) grid.appendChild(document.createElement("div")); 
+        const days = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); 
+        let calendarEvents = JSON.parse(localStorage.getItem(getCalKey())) || {}; 
+        let doctorBookings = JSON.parse(localStorage.getItem(getBookingKey())) || {}; 
+        
+        for(let i=1; i<=days; i++) { 
+            let cell = document.createElement("div"); cell.className = "cal-date"; cell.innerText = i; 
+            let currentDateLoop = new Date(d.getFullYear(), d.getMonth(), i); 
+            let dKey = currentDateLoop.toDateString(); let docDateStr = window.getDocDateStr(currentDateLoop); 
+            if (currentDateLoop.getDay() === 0) cell.classList.add("sunday"); 
+            if (dKey === new Date().toDateString()) cell.classList.add("today"); 
+            let monthDayKey = `${currentDateLoop.getMonth() + 1}-${currentDateLoop.getDate()}`; 
+            if (indianFestivals[monthDayKey]) { 
+                let festData = indianFestivals[monthDayKey]; let festIcon = document.createElement("i"); 
+                if(festData.type === 'cameo') festIcon.className = "fas fa-crown fest-dot fest-cameo"; 
+                else { 
+                    festIcon.className = "fas fa-circle fest-dot"; 
+                    if(festData.type === 'major') { festIcon.classList.add("fest-major"); cell.classList.add("sunday"); } else festIcon.classList.add("fest-minor"); 
+                } 
+                cell.appendChild(festIcon); cell.title = festData.title; 
+            } 
+            if(calendarEvents[dKey] || (doctorBookings[docDateStr] && Object.keys(doctorBookings[docDateStr]).length > 0)) { 
+                let dot = document.createElement("div"); dot.className = "status-line"; 
+                if(doctorBookings[docDateStr]) dot.classList.add("doc-booking"); cell.appendChild(dot); 
+            } 
+            cell.onclick = () => window.switchToFocus(new Date(dKey)); grid.appendChild(cell); 
+        } 
+    }
+
+    window.changeMonth = function(n) { displayDate.setMonth(displayDate.getMonth() + n); window.renderCalendar(); }
+
+    window.switchToFocus = function(date) {
+        selectedDate = date; document.getElementById("calendarGrid").style.display = "none"; document.getElementById("eventEditor").style.display = "block"; 
+        document.getElementById("targetDate").innerText = selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); 
+        window.renderDayEvents(); 
+        let monthDayKey = `${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`; 
+        if(indianFestivals[monthDayKey]) window.fireFestivalMagic(indianFestivals[monthDayKey].title); 
+    }
+
+    window.resetCalendar = function() { window.renderCalendar(); }
+
+    window.saveEvent = function() {
+        const title = document.getElementById("eventTitle").value; const key = selectedDate.toDateString(); 
+        if(!title) return; let calendarEvents = JSON.parse(localStorage.getItem(getCalKey())) || {}; 
+        if(!calendarEvents[key]) calendarEvents[key] = []; calendarEvents[key].push({title}); 
+        localStorage.setItem(getCalKey(), JSON.stringify(calendarEvents)); 
+        document.getElementById("eventTitle").value = ""; window.renderDayEvents(); 
+    }
+
+    window.deleteBooking = function(dateStr, time) {
+        if(!confirm("Are you sure you want to cancel this appointment?")) return; 
+        let doctorBookings = JSON.parse(localStorage.getItem(getBookingKey())) || {}; 
+        if(doctorBookings[dateStr] && doctorBookings[dateStr][time]) { 
+            delete doctorBookings[dateStr][time]; 
+            if(Object.keys(doctorBookings[dateStr]).length === 0) delete doctorBookings[dateStr]; 
+            localStorage.setItem(getBookingKey(), JSON.stringify(doctorBookings)); 
+            window.showToast("Appointment canceled successfully", "success"); window.renderDayEvents(); window.renderCalendar(); 
+        } 
+    }
+
+    window.deleteEvent = function(dateKey, index) {
+        if(!confirm("Delete this personal event?")) return; 
+        let calendarEvents = JSON.parse(localStorage.getItem(getCalKey())) || {}; 
+        if(calendarEvents[dateKey]) { 
+            calendarEvents[dateKey].splice(index, 1); 
+            if(calendarEvents[dateKey].length === 0) delete calendarEvents[dateKey]; 
+            localStorage.setItem(getCalKey(), JSON.stringify(calendarEvents)); 
+            window.showToast("Event deleted successfully", "success"); window.renderDayEvents(); window.renderCalendar(); 
+        } 
+    }
+
+    window.renderDayEvents = function() {
+        const list = document.getElementById("eventDisplay"); list.innerHTML = ""; const docDateStr = window.getDocDateStr(selectedDate); 
+        let calendarEvents = JSON.parse(localStorage.getItem(getCalKey())) || {}; let doctorBookings = JSON.parse(localStorage.getItem(getBookingKey())) || {}; 
+        let monthDayKey = `${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`; 
+        
+        if(indianFestivals[monthDayKey]) { 
+            let festData = indianFestivals[monthDayKey]; let bgColor, textColor, borderColor, icon; 
+            if(festData.type === 'major') { bgColor = "rgba(239, 68, 68, 0.1)"; textColor = "var(--danger)"; borderColor = "var(--danger)"; icon = "fa-flag"; } 
+            else if (festData.type === 'cameo') { bgColor = "rgba(168, 85, 247, 0.15)"; textColor = "#a855f7"; borderColor = "#a855f7"; icon = "fa-crown"; } 
+            else { bgColor = "rgba(245, 158, 11, 0.1)"; textColor = "#d97706"; borderColor = "#f59e0b"; icon = "fa-star"; } 
+            let item = document.createElement("div"); item.className = "event-item-container"; 
+            item.style.fontSize="0.75rem"; item.style.padding="10px"; item.style.background=bgColor; item.style.color=textColor; item.style.borderRadius="8px"; item.style.borderLeft=`3px solid ${borderColor}`; item.style.fontWeight="700"; 
+            item.innerHTML = `<div><i class="fas ${icon}" style="margin-right:5px;"></i> ${festData.title}</div>`; list.appendChild(item); 
+        } 
+        
+        if(doctorBookings[docDateStr]) { 
+            Object.entries(doctorBookings[docDateStr]).forEach(([time, docName]) => { 
+                let item = document.createElement("div"); item.className = "event-item-container"; 
+                item.style.fontSize="0.75rem"; item.style.padding="10px"; item.style.background="rgba(16, 185, 129, 0.1)"; item.style.color="var(--success)"; item.style.borderRadius="8px"; item.style.borderLeft="3px solid var(--success)"; item.style.fontWeight="600"; 
+                item.innerHTML = ` <div><i class="fas fa-stethoscope"></i> ${time} - ${docName}</div> <button onclick="deleteBooking('${docDateStr}', '${time}')" class="delete-btn" title="Cancel Appointment"><i class="fas fa-trash"></i></button> `; 
+                list.appendChild(item); 
+            }); 
+        } 
+        
+        const key = selectedDate.toDateString(); 
+        if(calendarEvents[key]) { 
+            calendarEvents[key].forEach((e, idx) => { 
+                let item = document.createElement("div"); item.className = "event-item-container"; 
+                item.style.fontSize="0.75rem"; item.style.padding="10px"; item.style.background="var(--input-bg)"; item.style.borderLeft="3px solid var(--primary)"; item.style.borderRadius="8px"; item.style.color="var(--text)"; item.style.fontWeight="500"; 
+                item.innerHTML = ` <div><i class="fas fa-clipboard-list" style="color:var(--muted); margin-right:5px;"></i> ${e.title}</div> <button onclick="deleteEvent('${key}', ${idx})" class="delete-btn" title="Delete Event"><i class="fas fa-trash"></i></button> `; 
+                list.appendChild(item); 
+            }); 
+        } 
+    }
+
+    window.checkAppointments = function() {
+        const now = new Date(); const todayStr = window.getDocDateStr(now); 
+        let doctorBookings = JSON.parse(localStorage.getItem(getBookingKey())) || {}; 
+        const todaysDocs = doctorBookings[todayStr]; if(!todaysDocs) return; 
+        Object.entries(todaysDocs).forEach(([timeStr, docName]) => { 
+            let [time, modifier] = timeStr.split(' '); let [hours, minutes] = time.split(':'); 
+            hours = parseInt(hours); if (hours === 12 && modifier === 'AM') hours = 0; if (hours < 12 && modifier === 'PM') hours += 12; 
+            let apptTime = new Date(now); apptTime.setHours(hours, parseInt(minutes), 0, 0); 
+            let diffMs = apptTime - now; let diffMins = Math.floor(diffMs / 60000); 
+            let alertKey = `alert_${todayStr}_${timeStr}`; 
+            if (diffMins > 0 && diffMins <= 30 && !sessionStorage.getItem(alertKey)) { 
+                sessionStorage.setItem(alertKey, "true"); alertSound.play(); 
+                document.getElementById('alertMsg').innerHTML = `You have an appointment with <b>${docName}</b> in <b>${diffMins} minutes!</b><br><br>Time: ${timeStr}`; 
+                document.getElementById('alertOverlay').style.display = 'flex'; 
+            } 
+        }); 
+    }
+
+    window.closeAlert = function() { document.getElementById('alertOverlay').style.display = 'none'; alertSound.pause(); alertSound.currentTime = 0;}
+    setInterval(window.checkAppointments, 60000);
+
+    window.updateGreetings = function() {
+        const hr = new Date().getHours(); const greet = document.getElementById("greeting"); 
+        const activeUser = localStorage.getItem("activeClinician"); const storageKey = activeUser ? `profileData_${activeUser}` : "profileData_guest"; 
+        const p = JSON.parse(localStorage.getItem(storageKey)) || {}; let rawName = p.name || activeUser || "User"; const fName = rawName.split(' ')[0]; 
+        if(hr >= 5 && hr < 12) greet.innerHTML = `Good Morning, <span style="opacity:0.9;">${fName}</span>`; 
+        else if(hr >= 12 && hr < 17) greet.innerHTML = `Good Afternoon, <span style="opacity:0.9;">${fName}</span>`; 
+        else if(hr >= 17 && hr < 21) greet.innerHTML = `Good Evening, <span style="opacity:0.9;">${fName}</span>`; 
+        else greet.innerHTML = `Good Night, <span style="opacity:0.9;">${fName}</span>`; 
+    }
+
+    const API_BASE = "http://127.0.0.1:5000";
+
+    window.checkServer = function() {
+        fetch(`${API_BASE}/`).then(() => { 
+            document.getElementById("serverStatus").innerText = "ONLINE"; document.getElementById("serverStatus").style.color = "var(--success)"; document.getElementById("sysHubContainer").classList.add("sys-hub-online"); 
+        }).catch(() => { 
+            document.getElementById("serverStatus").innerText = "OFFLINE"; document.getElementById("serverStatus").style.color = "var(--danger)"; document.getElementById("sysHubContainer").classList.remove("sys-hub-online"); 
+        }); 
+    }
+
+    window.runDiagnosticSequence = async function() {
+        const activeUser = localStorage.getItem("activeClinician"); 
+        if(activeUser === "Guest User") { window.showToast("Diagnostics restricted. Please log in with a verified account.", "error"); setTimeout(() => { window.location.href = "login.html"; }, 2500); return; } 
+        const name = document.getElementById("patientName").value; 
+        const file = state.file; 
+        if(!name || !file) return window.showToast("Please enter patient name and upload an X-Ray image.", "error"); 
+        
+        const btn = document.getElementById('runAnalysisBtn'); btn.classList.remove('ready'); btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> SCANNING IMAGE...`; 
+        const wrapper = document.getElementById('imageWrapper'); wrapper.classList.remove('scan-success'); wrapper.classList.add('scanning'); 
+        const hudText = document.getElementById('hudText'); hudText.innerHTML = "DESTINY DIAGNOSTIC<br>> ENERGY: 88%<br>> INITIATING..."; 
+        const typeText = (txt) => { hudText.innerHTML += "<br>> " + txt; } 
+        
+        if (labelInterval) clearInterval(labelInterval);
+        labelInterval = setInterval(() => window.spawnAILabel(wrapper), 400); 
+        
+        const steps = ["INITIALIZING RESNET50 NEURAL FRAMEWORK...", "SCANNING THORACIC RADIOGRAPHIC STRUCTURES...", "MAPPING PATHOLOGY & ANOMALY PROBABILITIES...", "COMPILING FINAL MEDICAL REPORT..."]; 
+        for (let step of steps) { typeText(step); await new Promise(r => setTimeout(r, 1750)); } 
+        wrapper.classList.add('scan-success'); hudText.innerHTML += "<br>> <span style='color:#10b981'>ANALYSIS COMPLETE. AWAITING SERVER...</span>"; btn.innerHTML = `<i class="fas fa-check-circle"></i> CONNECTING TO SERVER...`; 
+        window.generateDiagnosticReport(name, file); 
+    }
+
+    window.generateDiagnosticReport = async function(name, file) {
+        const fd = new FormData(); fd.append("image", file); 
+        try { 
+            state.apiStatus = "fetching";
+            const r = await fetch(`${API_BASE}/predict`, { method: "POST", body: fd }); 
+            const data = await r.json(); 
+            const activeUser = localStorage.getItem("activeClinician") || "Guest"; 
+            const storageKey = `profileData_${activeUser}`; const p = JSON.parse(localStorage.getItem(storageKey)) || {}; 
+            const finalPatientId = document.getElementById('patientIdDisplay') ? document.getElementById('patientIdDisplay').innerText : `EMRG-${Math.floor(Math.random()*10000)}`; 
+            
+            const report = { 
+                id: Date.now(), name: name, date: new Date().toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'}), time: new Date().toLocaleTimeString(), med: finalPatientId, ihi: "91-" + Math.floor(Math.random()*90000), 
+                ass: "AI analyzed the chest radiographic input. The system detected clinical markers using ResNet50 deep transfer learning. Associated symptoms reported: " + (state.symptoms.join(', ') || 'None'), 
+                diag: "Result: " + data.prediction + " [Confidence: " + (data.confidence || '89%') + "]", 
+                act: data.prediction === "Tuberculosis" ? "Urgent: Isolation and immediate sputum culture required." : "Healthy presentation. Follow up in 6 months." 
+            }; 
+            localStorage.setItem("currentReport", JSON.stringify(report)); 
+            const archiveKey = `diagnosticArchive_${activeUser}`; let archive = JSON.parse(localStorage.getItem(archiveKey)) || []; archive.unshift(report); localStorage.setItem(archiveKey, JSON.stringify(archive)); 
+            if (labelInterval) clearInterval(labelInterval); state.apiStatus = "success"; window.location.href = "report.html"; 
+        } catch(e) { 
+            if (labelInterval) clearInterval(labelInterval); 
+            document.getElementById('aiLabelContainer').innerHTML = ''; 
+            const wrapper = document.getElementById('imageWrapper'); wrapper.classList.remove('scanning', 'scan-success'); 
+            showToast("Server offline or error. Try again.", "error"); 
+            const btn = document.getElementById('runAnalysisBtn'); btn.innerHTML = `<i class="fas fa-bolt"></i> RUN RADIOGRAPHIC ANALYSIS`; 
+            state.apiStatus = "error";
+        } 
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const isLoggedIn = localStorage.getItem('healthlens_logged_in') === 'true';
+        if (!isLoggedIn) { window.location.href = "login.html"; return; }
+
+        window.initSymptoms(); window.fetchHealthNews(); window.loadRealProfileData(); 
+        const dtElement = document.getElementById("dateTime"); 
+        if(dtElement) dtElement.innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); 
+        window.updateGreetings(); window.renderCalendar(); window.checkServer(); window.checkAppointments(); 
+    });
+</script>
+
+</body>
+</html>

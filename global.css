@@ -1,0 +1,195 @@
+/* global.css - The Master Stylesheet for HealthLens */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    /* Universal Light Theme */
+    --primary-blue: #2a7fba;
+    --primary-hover: #1e6aa0;
+    --bg-gradient: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
+    --bg-color: #f4f7fe;
+    --card-bg: #ffffff;
+    --text-main: #2c3e50;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --nav-bg: #ffffff;
+    --footer-bg: #f8fbff;
+    --transition: all 0.3s ease;
+    --shadow-sm: 0 4px 6px rgba(0,0,0,0.05);
+    --shadow-md: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] {
+    /* Universal Dark/AMOLED Theme */
+    --primary-blue: #3b82f6;
+    --primary-hover: #60a5fa;
+    --bg-gradient: linear-gradient(135deg, #000000 0%, #0a0a0a 100%);
+    --bg-color: #050505;
+    --card-bg: #111111;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #262626;
+    --nav-bg: #000000;
+    --footer-bg: #050505;
+    --shadow-sm: 0 4px 6px rgba(0,0,0,0.5);
+    --shadow-md: 0 10px 25px rgba(0,0,0,0.7);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-color);
+    color: var(--text-main);
+    overflow-x: hidden;
+    transition: background-color var(--transition), color var(--transition);
+}
+
+/* Universal Buttons */
+.btn {
+    padding: 12px 28px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.btn-blue {
+    background: var(--primary-blue);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(42, 127, 186, 0.3);
+}
+
+.btn-blue:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(42, 127, 186, 0.4);
+}
+
+/* Scrollbar styling for entire app */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-blue);
+}
+
+/* Utility Classes */
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ==================================================
+   📱 HEALTHLENS SURGICAL MOBILE OVERRIDE
+   ================================================== */
+@media (max-width: 968px) {
+    /* --- 1. LOGIN PAGE FIX (Prevents destruction) --- */
+    body:has(.login-card) {
+        justify-content: center !important; 
+        padding: 20px !important;
+        align-items: center !important;
+    }
+    .login-card {
+        width: 100% !important;
+        max-width: 400px !important;
+        padding: 25px !important;
+        margin: 0 auto !important;
+        max-height: 90vh !important;
+    }
+
+    /* --- 2. APP PAGES (Dashboard, Doctor, Profile, Settings, Report) --- */
+    .app-container {
+        flex-direction: column !important;
+        height: 100vh !important;
+    }
+
+    /* Bottom Navigation Bar */
+    .sidebar {
+        position: fixed !important;
+        bottom: 0 !important; left: 0 !important;
+        width: 100% !important; height: 70px !important;
+        flex-direction: row !important; padding: 0 10px !important;
+        border-radius: 20px 20px 0 0 !important;
+        justify-content: space-around !important; align-items: center !important;
+        z-index: 9999 !important;
+        background: var(--card-bg) !important;
+        border-top: 1px solid var(--border-color);
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.1) !important;
+    }
+    .sidebar:hover { width: 100% !important; padding: 0 10px !important; border-radius: 20px 20px 0 0 !important; }
+    
+    .logo-img-icon, .logo-img-full, .sidebar h2, .sidebar > div { display: none !important; }
+    
+    .nav-list { flex-direction: row !important; justify-content: space-around !important; align-items: center !important; width: 100% !important; margin: 0 !important; padding: 0 !important;}
+    .nav-item { padding: 10px !important; margin: 0 !important; width: auto !important; background: transparent !important; color: var(--text-muted) !important; }
+    .nav-item i { font-size: 22px !important; margin: 0 !important; }
+    .nav-text { display: none !important; }
+    
+    .nav-item.active { background: transparent !important; color: var(--primary-blue) !important; transform: translateY(-4px); box-shadow: none !important; }
+    .nav-item.active i { filter: drop-shadow(0 4px 6px rgba(42, 127, 186, 0.4)); }
+    .nav-item[onclick*="logoutUser"] { display: none !important; }
+
+    /* Scrollable Main Area */
+    .main-content, .main-view, .main {
+        padding: 15px 15px 90px 15px !important; /* 90px clears the bottom nav */
+        height: 100vh !important;
+        overflow-y: auto !important;
+        width: 100% !important;
+    }
+
+    /* --- 3. DASHBOARD GRID FIXES --- */
+    .dashboard, .dashboard-container, .content-grid, .manager-layout, .settings-container, .report-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 20px !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .left-panel, .center-panel, .right-panel, .archive-panel, .viewer-panel, .right, .profile-side, .card {
+        width: 100% !important;
+        height: auto !important;
+        padding: 20px !important;
+        margin-bottom: 0 !important;
+        overflow: visible !important;
+    }
+
+    .dashboard-container.show-details .right-panel { width: 100% !important; }
+
+    /* Fix Header Alignments */
+    .top-header, header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 15px !important;
+        padding: 10px 0 !important;
+    }
+    .header-right, .btn-group {
+        width: 100% !important;
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+    }
+
+    /* Inner Component Fixes */
+    .doctor-grid, .info-grid, .extra-fields { grid-template-columns: 1fr !important; }
+    .patient-info-box { flex-direction: column !important; text-align: left !important; gap: 15px !important; }
+    .document-card { padding: 25px 15px !important; }
+}

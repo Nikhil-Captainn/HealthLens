@@ -1,0 +1,23 @@
+{
+  "name": "HealthLens",
+  "short_name": "HealthLens",
+  "description": "Automated Chest Disease Prediction Framework",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#eef2f9",
+  "theme_color": "#2a7fba",
+  "icons": [
+    {
+      "src": "assets/Favicon_HealthLens.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/logo_health_lens_transparent_only_logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

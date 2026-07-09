@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sign In | HealthLens</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+    if (localStorage.getItem('healthlens_logged_in') === 'true') {
+        window.location.href = 'index.html'; 
+    }
+</script>
+
+<link rel="stylesheet" href="global.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+/* Premium UI Styling with High Contrast */
+html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background-color: #f4f7fe; }
+[data-theme="dark"] html, [data-theme="dark"] body { background-color: #000000; }
+
+:root {
+    --text-dark: #1e293b; --text-light: #64748b; --border-color: #e2e8f0; 
+    --card-bg: #ffffff; --body-bg: url("assets/PATIENT-bg.svg");
+    --input-fill: #f8fafc; --danger: #ef4444; --success: #10b981; --primary-blue: #2a7fba;
+}
+[data-theme="dark"] {
+    --card-bg: #0a0a0a; --text-dark: #f8fafc; --text-light: #94a3b8;
+    --border-color: #1a1a1a; --input-fill: #121212;
+}
+
+body {
+    background: var(--body-bg) center center / cover no-repeat fixed;
+    display: flex; justify-content: flex-end; align-items: center;
+    padding-right: 15%; transition: background 0.3s ease;
+}
+[data-theme="dark"] body { background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), var(--body-bg) center center / cover no-repeat fixed; }
+@media (max-width: 768px) { body { padding-right: 0; justify-content: center; } }
+
+.login-card {
+    width: 410px; background: var(--card-bg); border-radius: 18px; padding: 32px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+    position: relative; border: 2px solid var(--primary-blue);
+    max-height: 90vh; overflow-y: auto;
+}
+[data-theme="dark"] .login-card { border: 1px solid #333; }
+.login-card::-webkit-scrollbar { width: 6px; }
+.login-card::-webkit-scrollbar-thumb { background: rgba(42, 127, 186, 0.5); border-radius: 10px; }
+
+.auth-view { display: none; animation: fadeIn 0.4s ease; }
+.auth-view.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.theme-switcher { position: absolute; top: 15px; right: 15px; z-index: 10; cursor: pointer;}
+h2 { font-size: 1.7rem; color: var(--text-dark); margin-bottom: 5px; text-align: center; }
+.subtitle { color: var(--text-light); font-size: 0.85rem; margin-bottom: 22px; text-align: center; }
+
+.social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.social-btn {
+    padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);
+    background: var(--input-fill); color: var(--text-dark); display: flex;
+    align-items: center; justify-content: center; gap: 8px; font-weight: 600;
+    cursor: pointer; font-size: 0.8rem; transition: 0.3s;
+}
+.social-btn:hover { background: #eaf4ff; border-color: var(--primary-blue); }
+[data-theme="dark"] .social-btn:hover { background: #1e293b; color: #f8fafc; border-color: var(--primary-blue); }
+
+.divider { display: flex; align-items: center; margin: 18px 0; color: #94a3b8; font-size: 0.7rem; text-transform: uppercase; }
+.divider::before,.divider::after { content:""; flex:1; border-bottom:1px solid var(--border-color); }
+.divider::before { margin-right:10px; } .divider::after { margin-left:10px; }
+
+.form-group { margin-bottom: 14px; position: relative; }
+.row-group { display: flex; gap: 10px; }
+.row-group .form-group { flex: 1; }
+label { font-size: 0.75rem; color: var(--text-light); display: block; margin-bottom: 4px; font-weight: 600; }
+input {
+    width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);
+    background: var(--input-fill); color: var(--text-dark); outline: none; font-size: 0.9rem; transition: 0.3s; box-sizing: border-box;
+}
+input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(42, 127, 186, 0.1); }
+.input-error { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important; background: rgba(239, 68, 68, 0.02) !important; }
+.input-success { border-color: var(--success) !important; }
+
+/* Phone & Country Dropdown Styles */
+.phone-input-group { display: flex; gap: 5px; position: relative; }
+.country-select-box {
+    width: 40%; padding: 12px 8px; border-radius: 8px; border: 1px solid var(--border-color);
+    background: var(--input-fill); color: var(--text-dark); font-size: 0.8rem;
+    cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; text-align: center;
+}
+.country-dropdown {
+    position: absolute; top: 100%; left: 0; width: 250px; background: var(--input-fill);
+    border: 1px solid var(--border-color); border-radius: 8px; z-index: 100;
+    max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+.country-dropdown.show { display: block; }
+.country-item { padding: 8px 10px; font-size: 0.8rem; cursor: pointer; color: var(--text-dark); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; }
+.country-item:hover { background: var(--card-bg); }
+
+.verify-btn {
+    position: absolute; right: 5px; top: 6px; background: var(--primary-blue);
+    color: white; border: none; padding: 6px 12px; border-radius: 5px; font-size: 0.7rem; cursor: pointer; font-weight: bold; transition: 0.3s;
+}
+.verify-btn.verified { background: #10b981; pointer-events: none; }
+
+/* OTP Section - Fixed Dark Mode */
+.inline-otp-section { display: none; background: #f0fdf4; padding: 10px; border-radius: 8px; margin-bottom: 14px; border: 1px dashed #10b981; }
+.otp-label { color: #065f46; font-weight: bold; margin-bottom: 6px; display: block; }
+[data-theme="dark"] .inline-otp-section { background: #064e3b; }
+[data-theme="dark"] .otp-label { color: #6ee7b7; } 
+[data-theme="dark"] .inline-otp-section input { background: #022c22; color: #fff; border-color: #059669; }
+
+.btn-submit {
+    width: 100%; padding: 12px; border-radius: 8px; background: linear-gradient(135deg,#2a7fba,#4da3ff);
+    color: white; border: none; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-top: 10px;
+}
+.btn-submit:hover { opacity: .9; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(42, 127, 186, 0.3); }
+
+.nav-text { margin-top: 16px; font-size: 0.8rem; text-align: center; color: var(--text-light); }
+.nav-text a, .back-btn, .forgot-link { color: var(--primary-blue); font-weight: 700; text-decoration: none; cursor: pointer; }
+.back-btn { margin-bottom: 15px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px; }
+.forgot-link { font-size: 0.75rem; float: right; margin-top: -10px; margin-bottom: 10px; }
+.error-msg { color: #ef4444; font-size: 0.75rem; display: none; margin-top: 10px; text-align: center; font-weight: 600; }
+.success-msg { color: #10b981; font-size: 0.75rem; display: none; margin-top: 10px; text-align: center; font-weight: 600; }
+.hint-text { font-size: 0.65rem; color: var(--text-light); margin-top: 4px; display: block; }
+
+/* Profile Upload */
+.profile-upload-container { display: flex; flex-direction: column; align-items: center; margin-top: 10px; margin-bottom: 20px; }
+.profile-circle {
+    width: 80px; height: 80px; border-radius: 50%; background: var(--input-fill);
+    display: flex; justify-content: center; align-items: center; cursor: pointer;
+    position: relative; overflow: hidden; border: 2px dashed var(--primary-blue); transition: 0.3s;
+}
+.profile-circle img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.preset-avatars { display: flex; gap: 12px; justify-content: center; margin-bottom: 20px; }
+.preset-avatar { width: 46px; height: 46px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.3s; background: var(--input-fill); }
+.preset-avatar:hover, .preset-avatar.selected { border-color: var(--primary-blue); transform: scale(1.15); box-shadow: 0 4px 10px rgba(42, 127, 186, 0.3); }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="theme-switcher global-theme-toggle" onclick="toggleGlobalTheme()"><i data-lucide="moon"></i></div>
+
+    <div id="view-login" class="auth-view active">
+        <h2>Sign In</h2>
+        <p class="subtitle">Secure access to HealthLens</p>
+        
+        <div class="social-grid">
+            <button class="social-btn" onclick="signInWithGoogle()"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="16"> Google</button>
+            <button class="social-btn" onclick="signInAsGuest()"><i data-lucide="user-round-check" style="color: #64748b; width: 16px;"></i> Guest</button>
+        </div>
+        
+        <div class="divider">OR USE ACCOUNT</div>
+        
+        <form onsubmit="event.preventDefault(); processLogin();">
+            <div class="form-group">
+                <label>Username or Email Address</label>
+                <input type="text" id="loginInput" autocomplete="username" placeholder="alex123 or doc@hospital.com" oninput="clearError(this)" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPass" autocomplete="current-password" placeholder="Enter your password" oninput="clearError(this)" required>
+            </div>
+            <a class="forgot-link" onclick="switchView('view-forgot')">Forgot Password?</a>
+            
+            <button type="submit" class="btn-submit" id="btn-login">Secure Sign In</button>
+        </form>
+        <p id="error-login" class="error-msg"></p>
+        
+        <div class="nav-text" style="margin-top: 20px;">Don't have an account? <a onclick="switchView('view-signup')">Create Account</a></div>
+    </div>
+
+    <div id="view-otp" class="auth-view">
+        <a class="back-btn" onclick="switchView('view-login')"><i data-lucide="arrow-left" style="width: 14px;"></i> Back</a>
+        <h2>Two-Factor Auth</h2>
+        <p class="subtitle" id="otp-subtitle">We sent a 6-digit secure code.</p>
+        
+        <form onsubmit="event.preventDefault(); verifyOTPAndEnter();">
+            <div class="form-group">
+                <label>Enter 6-Digit Code</label>
+                <input type="text" id="otpInput" autocomplete="one-time-code" placeholder="123456" maxlength="6" style="text-align:center; font-size: 1.5rem; letter-spacing: 5px; font-weight: bold;" oninput="clearError(this)" required>
+            </div>
+            <button type="submit" class="btn-submit">Verify & Enter Portal</button>
+        </form>
+        <p id="error-otp" class="error-msg"></p>
+    </div>
+
+    <div id="view-signup" class="auth-view">
+        <a class="back-btn" onclick="switchView('view-login')"><i data-lucide="arrow-left" style="width: 14px;"></i> Back to Login</a>
+        <h2>Create Account</h2>
+
+        <div class="profile-upload-container">
+            <div class="profile-circle" onclick="document.getElementById('regImage').click()">
+                <i id="cam-icon" data-lucide="camera" style="width: 32px; height: 32px;"></i>
+                <img id="profilePreview">
+            </div>
+            <input type="file" id="regImage" style="display:none" accept="image/*" onchange="previewImage(event)">
+        </div>
+        <div class="preset-avatars">
+            <img src="https://api.dicebear.com/7.x/lorelei/svg?seed=Alex" class="preset-avatar" onclick="selectPresetAvatar(this)">
+            <img src="https://api.dicebear.com/7.x/lorelei/svg?seed=Morgan" class="preset-avatar" onclick="selectPresetAvatar(this)">
+            <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Sam" class="preset-avatar" onclick="selectPresetAvatar(this)">
+        </div>
+
+        <form autocomplete="on" onsubmit="event.preventDefault(); processSignUp();">
+            <div class="row-group">
+                <div class="form-group"><label>First Name *</label><input type="text" id="regFirst" autocomplete="given-name" placeholder="Alex" oninput="clearError(this)" required></div>
+                <div class="form-group"><label>Last Name *</label><input type="text" id="regLast" autocomplete="family-name" placeholder="Morgan" oninput="clearError(this)" required></div>
+            </div>
+            
+            <div class="row-group">
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" id="regUser" autocomplete="username" placeholder="alex_123" onkeyup="validateUsername(this)" required>
+                    <span class="hint-text">3-15 chars, no spaces/symbols.</span>
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth *</label>
+                    <input type="date" id="regDob" autocomplete="bday" oninput="clearError(this)" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Email Address *</label>
+                <div class="phone-input-group">
+                    <input type="email" id="regEmail" autocomplete="email" placeholder="doc@hospital.com" oninput="clearError(this)" required>
+                    <button type="button" class="verify-btn" id="btn-verify-email" onclick="triggerEmailOTP()">Verify</button>
+                </div>
+            </div>
+            <div id="inline-email-otp" class="inline-otp-section">
+                <label class="otp-label">Enter Email OTP</label>
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="emailOtpInput" placeholder="123456" style="border-color:#10b981;">
+                    <button type="button" class="btn-submit" style="width:40%; padding:8px; margin-top:0;" onclick="confirmEmailOTP()">Confirm</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>WhatsApp Number *</label>
+                <div class="phone-input-group">
+                    <div class="country-select-box" id="regCountryBox" onclick="toggleCountryDropdown()">
+                        <span id="regCountryFlag" style="display: flex; align-items: center; gap: 5px;">⏳ Loading...</span> 
+                        <i data-lucide="chevron-down" style="width: 14px;"></i>
+                    </div>
+                    <input type="tel" id="regPhone" autocomplete="tel-national" placeholder="9876543210" style="width: 60%;">
+                    <button type="button" class="verify-btn" id="btn-verify-phone" onclick="triggerWhatsAppOTP()">Verify WA</button>
+                    
+                    <div class="country-dropdown" id="regDropdown"></div>
+                </div>
+            </div>
+            <div id="inline-phone-otp" class="inline-otp-section">
+                <label class="otp-label">Enter WhatsApp OTP</label>
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="phoneOtpInput" placeholder="123456" style="border-color:#10b981;">
+                    <button type="button" class="btn-submit" style="width:40%; padding:8px; margin-top:0;" onclick="confirmWhatsAppOTP()">Confirm</button>
+                </div>
+            </div>
+
+            <div class="row-group">
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" id="regPass" autocomplete="new-password" placeholder="Password" onkeyup="validatePassword(this)" required>
+                    <span class="hint-text">8+ chars, 1 Uppercase, 1 Number.</span>
+                </div>
+                <div class="form-group">
+                    <label>Confirm *</label>
+                    <input type="password" id="regConfirm" autocomplete="new-password" placeholder="Re-type" oninput="clearError(this)" required>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-submit" id="btn-signup">Create Secure Account</button>
+        </form>
+        <p id="error-signup" class="error-msg"></p>
+    </div>
+
+    <div id="view-forgot" class="auth-view">
+        <a class="back-btn" onclick="switchView('view-login')"><i data-lucide="arrow-left" style="width: 14px;"></i> Back to Login</a>
+        <h2>Reset Password</h2>
+        <p class="subtitle">Enter your registered email address to receive a password reset link.</p>
+        <form onsubmit="event.preventDefault(); sendPasswordReset();">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="resetEmail" autocomplete="email" placeholder="doctor@hospital.com" oninput="clearError(this)" required>
+            </div>
+            <button type="submit" class="btn-submit" id="btn-reset">Send Reset Link</button>
+        </form>
+        <p id="error-reset" class="error-msg"></p>
+        <p id="success-reset" class="success-msg">✅ Password reset link sent! Please check your email inbox.</p>
+    </div>
+
+</div>
+
+<script src="global.js"></script>
+
+<script>
+    // Utility UI Functions
+    window.showError = function(id, msg) { const el = document.getElementById(id); if(el) { el.innerText = msg; el.style.display = 'block'; } };
+    window.hideErrors = function() { document.querySelectorAll('.error-msg, .success-msg').forEach(el => el.style.display = 'none'); };
+    window.clearError = function(el) { el.classList.remove('input-error'); window.hideErrors(); };
+    window.switchView = function(id) { 
+        window.hideErrors(); 
+        document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active')); 
+        document.getElementById(id).classList.add('active');
+        if (typeof lucide !== 'undefined') lucide.createIcons(); 
+    };
+
+    // STRICT RULES VALIDATION
+    window.validateUsername = function(el) {
+        const regex = /^[a-zA-Z0-9_]{3,15}$/;
+        if(regex.test(el.value)) { el.classList.add('input-success'); el.classList.remove('input-error'); } 
+        else { el.classList.remove('input-success'); el.classList.add('input-error'); }
+    };
+    window.validatePassword = function(el) {
+        const regex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+        if(regex.test(el.value)) { el.classList.add('input-success'); el.classList.remove('input-error'); } 
+        else { el.classList.remove('input-success'); el.classList.add('input-error'); }
+    };
+
+    // REST API COUNTRY DROPDOWN WITH FLAGS
+    let selectedCountryCode = "+91"; 
+
+    async function fetchCountriesAPI() {
+        try {
+            const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flags,idd,cca2');
+            let data = await response.json();
+            
+            data = data.filter(c => c.idd && c.idd.root);
+            data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+
+            const list = document.getElementById('regDropdown');
+            list.innerHTML = '';
+
+            data.forEach(country => {
+                const root = country.idd.root || '';
+                const suffix = (country.idd.suffixes && country.idd.suffixes.length > 0) ? country.idd.suffixes[0] : '';
+                const dialCode = root + suffix;
+                const flagUrl = country.flags.svg;
+
+                const div = document.createElement('div'); 
+                div.className = 'country-item'; 
+                div.innerHTML = `<img src="${flagUrl}" style="width: 20px; border-radius: 2px;"> <span>${country.name.common} (${dialCode})</span>`;
+                
+                div.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    document.getElementById('regCountryFlag').innerHTML = `<img src="${flagUrl}" style="width: 20px; border-radius: 2px;"> ${dialCode}`; 
+                    selectedCountryCode = dialCode; 
+                    list.classList.remove('show'); 
+                };
+                list.appendChild(div);
+            });
+
+            const india = data.find(c => c.cca2 === 'IN');
+            if(india) {
+                selectedCountryCode = india.idd.root + india.idd.suffixes[0];
+                document.getElementById('regCountryFlag').innerHTML = `<img src="${india.flags.svg}" style="width: 20px; border-radius: 2px;"> ${selectedCountryCode}`;
+            }
+
+        } catch (error) {
+            console.error("Failed to load countries via API", error);
+            document.getElementById('regCountryFlag').innerHTML = "🇮🇳 +91";
+        }
+    }
+    fetchCountriesAPI();
+
+    window.toggleCountryDropdown = function() { document.getElementById('regDropdown').classList.toggle('show'); };
+    window.onclick = function(e) { if (!e.target.closest('.country-select-box')) { document.getElementById('regDropdown').classList.remove('show'); } };
+
+    // Avatar Logic
+    window.previewImage = function(event) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            const img = document.getElementById('profilePreview'); img.src = reader.result; img.style.display = 'block';
+            document.getElementById('cam-icon').style.display = 'none';
+        }
+        if(event.target.files[0]) { reader.readAsDataURL(event.target.files[0]); }
+    }
+    window.selectPresetAvatar = function(element) {
+        const img = document.getElementById('profilePreview'); img.src = element.src; img.style.display = 'block';
+        document.getElementById('cam-icon').style.display = 'none';
+        document.querySelectorAll('.preset-avatar').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+    };
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInAnonymously, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA90dg3eiX0aSqDATaU2ZdR-G10-elrva0",
+    authDomain: "healthlens-5b6d9.firebaseapp.com",
+    projectId: "healthlens-5b6d9",
+    storageBucket: "healthlens-5b6d9.firebasestorage.app",
+    messagingSenderId: "43708270749",
+    appId: "1:43708270749:web:4d2f1b476dbc159f426c74"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const googleProvider = new GoogleAuthProvider();
+  
+  let isEmailVerified = false;
+  let isPhoneVerified = false;
+  const MAKE_WEBHOOK_URL = "https://hook.eu1.make.com/zol91lggd2ci456mdm5ihq2ub8mye83h";
+
+  // UNIVERSAL LOGIN FUNCTION
+  window.triggerGlobalLoginState = function(userDataObj) {
+      localStorage.setItem('healthlens_logged_in', 'true');
+      localStorage.setItem('activeClinician', userDataObj.firstName + " " + (userDataObj.lastName || ""));
+      if(userDataObj.photoURL) localStorage.setItem('healthlens_user_avatar', userDataObj.photoURL);
+      if(userDataObj.username) localStorage.setItem('healthlens_username', userDataObj.username);
+      if(userDataObj.email) localStorage.setItem('healthlens_email', userDataObj.email);
+      if(userDataObj.dob) localStorage.setItem('healthlens_dob', userDataObj.dob);
+      if(userDataObj.phone) localStorage.setItem('healthlens_phone', userDataObj.phone);
+      
+      window.location.href = "index.html"; 
+  }
+
+  // 1. STANDARD LOGIN & ADMIN BYPASS
+  window.processLogin = async function() {
+      window.hideErrors();
+      let input = document.getElementById('loginInput').value.trim();
+      const pass = document.getElementById('loginPass').value;
+      const btn = document.getElementById('btn-login');
+
+      if(!input || !pass) return window.showError('error-login', "Please enter Username/Email and Password.");
+
+      // Master Admin Bypass
+      const adminTeam = { "Nikhil": "Captain", "Nick": "Captain", "Yadvi": "Yadvi@30", "Shefali": "Sheefali@09", "Piyush": "Piyush@123" };
+      if (adminTeam[input] && adminTeam[input] === pass) {
+          localStorage.setItem('healthlens_logged_in', 'true');
+          localStorage.setItem('activeClinician', input);
+          localStorage.setItem('healthlens_role', 'admin'); 
+          localStorage.setItem('healthlens_user_avatar', 'https://api.dicebear.com/7.x/lorelei/svg?seed=' + input);
+          
+          fetch(MAKE_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actionType: "login", email: input+"@admin.com", patientName: input }) }).catch(e=>console.log(e));
+          window.location.href = "index.html"; 
+          return; 
+      }
+
+      btn.innerText = "Signing In...";
+      let loginEmail = input;
+
+      try {
+          if (!input.includes('@')) {
+              const q = query(collection(db, "clinicians"), where("username", "==", input));
+              const querySnapshot = await getDocs(q);
+              if (!querySnapshot.empty) { loginEmail = querySnapshot.docs[0].data().email; } 
+              else { throw new Error("Username not found."); }
+          }
+
+          const userCred = await signInWithEmailAndPassword(auth, loginEmail, pass);
+          const docSnap = await getDoc(doc(db, "clinicians", userCred.user.uid));
+          
+          fetch(MAKE_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actionType: "login", email: loginEmail }) }).catch(e=>console.log(e));
+
+          if (docSnap.exists()) { triggerGlobalLoginState(docSnap.data()); } 
+          else { triggerGlobalLoginState({firstName: "HealthLens", lastName: "User", email: loginEmail}); }
+
+      } catch (error) {
+          window.showError('error-login', error.message.includes('auth') ? "Incorrect Password or Account not found." : error.message);
+      } finally { btn.innerText = "Secure Sign In"; }
+  };
+
+  // 2. REAL GOOGLE AUTH (Fetches Real Profile Photo)
+  window.signInWithGoogle = function() {
+      signInWithPopup(auth, googleProvider).then(async (result) => {
+          const user = result.user; 
+          const docRef = doc(db, "clinicians", user.uid); 
+          const docSnap = await getDoc(docRef);
+          
+          let userDataObj = { 
+              uid: user.uid, 
+              username: user.email.split('@')[0], 
+              firstName: user.displayName ? user.displayName.split(" ")[0] : "Google",
+              lastName: user.displayName ? user.displayName.split(" ").slice(1).join(" ") : "User",
+              email: user.email, 
+              photoURL: user.photoURL 
+          };
+          
+          if (!docSnap.exists()) { await setDoc(docRef, userDataObj); } else { userDataObj = docSnap.data(); }
+          
+          fetch(MAKE_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actionType: "login", email: user.email, patientName: userDataObj.firstName }) }).catch(e=>console.log(e));
+          triggerGlobalLoginState(userDataObj);
+      }).catch((e) => window.showError('error-login', e.message));
+  };
+
+  // 3. CORRECT OTP TRIGGERS (No overlapping UI)
+  window.triggerEmailOTP = async function() {
+      window.hideErrors();
+      const email = document.getElementById('regEmail').value.trim();
+      if(!email) return window.showError('error-signup', "Enter email first.");
+
+      const btn = document.getElementById('btn-verify-email'); btn.innerText = "...";
+      const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      sessionStorage.setItem("healthlens_reg_email_otp", generatedOTP);
+
+      try {
+          await fetch(MAKE_WEBHOOK_URL, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ actionType: "auth", email: email, otpCode: generatedOTP })
+          });
+          document.getElementById('inline-email-otp').style.display = 'block'; 
+          btn.innerText = "Sent";
+      } catch(err) { window.showError('error-signup', "Failed to send email OTP."); btn.innerText = "Verify"; }
+  };
+  
+  window.confirmEmailOTP = function() {
+      if(document.getElementById('emailOtpInput').value === sessionStorage.getItem("healthlens_reg_email_otp")) {
+          isEmailVerified = true; document.getElementById('inline-email-otp').style.display = 'none';
+          document.getElementById('btn-verify-email').innerText = "✅ Verified"; document.getElementById('btn-verify-email').classList.add('verified');
+      } else { window.showError('error-signup', "Invalid Email Code."); }
+  };
+
+  window.triggerWhatsAppOTP = async function() {
+      window.hideErrors();
+      const phoneNum = document.getElementById('regPhone').value.trim();
+      if(!phoneNum) return window.showError('error-signup', "Enter WhatsApp number first.");
+
+      const btn = document.getElementById('btn-verify-phone'); btn.innerText = "Sending WA...";
+      const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      sessionStorage.setItem("healthlens_wa_otp", generatedOTP);
+
+      try {
+          await fetch(MAKE_WEBHOOK_URL, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ actionType: "whatsapp_otp", phone: (selectedCountryCode + phoneNum).replace('+', ''), otpCode: generatedOTP })
+          });
+          document.getElementById('inline-phone-otp').style.display = 'block'; 
+          btn.innerText = "Sent WA";
+      } catch(err) { window.showError('error-signup', "Failed to send WhatsApp OTP."); btn.innerText = "Verify WA"; }
+  };
+
+  window.confirmWhatsAppOTP = function() {
+      if(document.getElementById('phoneOtpInput').value === sessionStorage.getItem("healthlens_wa_otp")) {
+          isPhoneVerified = true; document.getElementById('inline-phone-otp').style.display = 'none';
+          const btn = document.getElementById('btn-verify-phone'); btn.innerText = "✅ WA Verified"; btn.classList.add('verified');
+      } else { window.showError('error-signup', "Invalid WhatsApp Code."); }
+  };
+
+  // 4. FULL SIGN UP LOGIC RESTORED
+  window.processSignUp = async function() {
+      window.hideErrors();
+      const first = document.getElementById('regFirst').value.trim();
+      const last = document.getElementById('regLast').value.trim();
+      const user = document.getElementById('regUser').value.trim();
+      const dob = document.getElementById('regDob').value;
+      const email = document.getElementById('regEmail').value.trim();
+      const phone = document.getElementById('regPhone').value.trim();
+      const pass = document.getElementById('regPass').value;
+      const confirm = document.getElementById('regConfirm').value;
+      const btn = document.getElementById('btn-signup');
+
+      if(!first || !last || !user || !dob || !email || !pass) return window.showError('error-signup', "Fill all required fields.");
+      if(!/^[a-zA-Z0-9_]{3,15}$/.test(user)) return window.showError('error-signup', "Invalid Username format.");
+      if(pass !== confirm) return window.showError('error-signup', "Passwords do not match.");
+      if(!isEmailVerified) return window.showError('error-signup', "Verify your Email before creating an account.");
+      if(!isPhoneVerified) return window.showError('error-signup', "Verify your WhatsApp number before creating an account.");
+
+      btn.innerText = "Creating Secure Account...";
+      try {
+          const q = query(collection(db, "clinicians"), where("username", "==", user));
+          if (!(await getDocs(q)).empty) throw new Error("Username already taken.");
+
+          const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+          const photoSrc = document.getElementById('profilePreview').src;
+          const finalAvatar = (photoSrc && photoSrc.includes('base64')) ? photoSrc : 'https://api.dicebear.com/7.x/lorelei/svg?seed=' + first;
+
+          const userDataObj = { uid: userCred.user.uid, username: user, firstName: first, lastName: last, dob: dob, email: email, phone: phone ? (selectedCountryCode + phone) : "", photoURL: finalAvatar };
+          await setDoc(doc(db, "clinicians", userCred.user.uid), userDataObj);
+          
+          fetch(MAKE_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actionType: "signup", email: email, firstName: first }) }).catch(e=>console.log(e));
+          triggerGlobalLoginState(userDataObj);
+      } catch (error) { window.showError('error-signup', error.message); btn.innerText = "Create Secure Account"; }
+  };
+
+  // 5. GUEST & FORGOT PASSWORD
+  window.signInAsGuest = function() {
+      signInAnonymously(auth).then(() => triggerGlobalLoginState({firstName: 'Guest', lastName: 'User', photoURL: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Guest'}))
+      .catch((e) => window.showError('error-login', e.message));
+  };
+
+  window.sendPasswordReset = async function() {
+      window.hideErrors();
+      const email = document.getElementById('resetEmail').value.trim();
+      if(!email) return window.showError('error-reset', "Please enter your email.");
+      const btn = document.getElementById('btn-reset'); btn.innerText = "Sending...";
+      try {
+          await sendPasswordResetEmail(auth, email);
+          document.getElementById('success-reset').style.display = 'block';
+      } catch(error) { window.showError('error-reset', "Error: " + error.message); } 
+      finally { btn.innerText = "Send Reset Link"; }
+  };
+</script>
+</body>
+</html>

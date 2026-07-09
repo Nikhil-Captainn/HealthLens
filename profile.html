@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HealthLens | Patient Profile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<link rel="apple-touch-icon" href="assets/logo_health_lens_transparent_only_logo.png">
+
+<style>
+    /* 🟢 EXACT DASHBOARD THEME VARIABLES */
+    :root{
+        --primary:#2563eb;
+        --bg:#f4f7fe; --card:#ffffff; --text:#0f172a;
+        --muted:#64748b; --success:#10b981; --danger:#ef4444; --accent: #3b82f6;
+        --sidebar:#0f172a; --border: #cbd5e1; --input-bg: #f8fafc;
+        --card-border: #94a3b8; 
+        --shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    [data-theme="dark"] {
+        --bg: #000000; --card: #111111; --text: #f8fafc;
+        --muted: #94a3b8; --sidebar: #050505; --border: #262626; --input-bg: #1a1a1a;
+        --card-border: #334155; 
+        --shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent;}
+    body{font-family:'Inter', sans-serif; background:var(--bg); color:var(--text); transition: 0.3s; height: 100vh; display: flex; overflow: hidden;}
+
+    /* 🟢 SIDEBAR (MATCHING DASHBOARD) */
+    .sidebar{width:280px; background:var(--sidebar); color:white; padding:40px 25px; display: flex; flex-direction: column; z-index: 100; border-right: 1px solid var(--border);}
+    .sidebar-logo { max-width: 160px; margin-bottom: 50px; }
+    .nav-list { list-style: none; flex-grow: 1; }
+    .nav-item{padding:14px 18px; border-radius:12px; margin-bottom:8px; cursor:pointer; color:#94a3b8; transition: 0.3s; display: flex; align-items: center; gap: 12px; font-weight: 600;}
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; transform: translateX(5px);}
+    .nav-item.active{background:var(--primary); color:white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);}
+    .status-dot-container { position: relative; display: flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-right: 10px; }
+    .status-dot-core { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; z-index: 2; transition: 0.3s; }
+    .status-dot-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: var(--danger); opacity: 0.6; z-index: 1; animation: radarPing 2s infinite ease-out; transition: 0.3s; }
+    .sys-hub-online .status-dot-core, .sys-hub-online .status-dot-ring { background: var(--success); }
+    @keyframes radarPing { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.5); opacity: 0; } }
+
+    /* 🟢 MAIN LAYOUT */
+    .dashboard { display:flex; flex: 1; overflow: hidden; justify-content: center; }
+    .main { padding: 40px; overflow-y: auto; width: 100%; max-width: 1000px; padding-bottom: 120px;}
+
+    /* Top Action Bar */
+    .top-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .btn-group { display: flex; gap: 10px; }
+    .btn { padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; border: none; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+    .btn-print { background: var(--card); color: var(--primary); border: 1px solid var(--border); }
+    .btn-edit { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
+    .btn-edit:hover { opacity: 0.9; transform: translateY(-2px); }
+
+    /* Profile Header Card (Matches Dashboard Header) */
+    .header-banner { 
+        background: linear-gradient(135deg, var(--primary), #4f46e5); color:white; 
+        border-radius:24px; padding:40px; margin-bottom:30px; position: relative; 
+        overflow: hidden; box-shadow: var(--shadow); display: flex; align-items: center; gap: 30px;
+    }
+    .header-banner::after { content: ''; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+    
+    .avatar-wrapper { position: relative; width: 120px; height: 120px; flex-shrink: 0; z-index: 2; }
+    .profile-img { width: 100%; height: 100%; border-radius: 50%; border: 4px solid rgba(255,255,255,0.3); object-fit: cover; background: var(--bg); }
+    .photo-edit-btn { position: absolute; bottom: 0; right: 0; background: white; color: var(--primary); width: 32px; height: 32px; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.2s;}
+    .photo-edit-btn:hover { transform: scale(1.1); }
+
+    .header-info { z-index: 2; }
+    .header-info h1 { font-size: 2rem; font-weight: 800; margin-bottom: 5px; }
+    .header-info p { font-size: 0.9rem; opacity: 0.9; font-weight: 500; display: flex; align-items: center; gap: 8px;}
+    .admin-badge { background: var(--danger); color: white; font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 8px; margin-left: 10px; display: none;}
+
+    /* Standard Cards */
+    .card { background:var(--card); padding:35px; border-radius:24px; margin-bottom:30px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .card h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 25px; color: var(--text); display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); padding-bottom: 15px;}
+    .card h2 i { color: var(--primary); }
+
+    /* Grid & Forms */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .info-item { display: flex; flex-direction: column; gap: 8px; }
+    .info-label { font-size: 0.75rem; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;}
+    
+    .display-value { font-size: 1rem; color: var(--text); font-weight: 600; padding: 10px 0; border-bottom: 1px dashed transparent; }
+    
+    .edit-input { width:100%; padding:12px 16px; border-radius:12px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); outline: none; font-weight: 500; font-size: 14px; display: none; transition: 0.3s; font-family: inherit;}
+    .edit-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+    .edit-input[readonly] { background: var(--border); cursor: not-allowed; opacity: 0.7; }
+    .input-error { border-color: var(--danger) !important; background: rgba(239,68,68,0.05) !important; }
+
+    /* Verification UI */
+    .verify-badge { font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 800; }
+    .verify-badge.verified { background: rgba(16,185,129,0.1); color: var(--success); }
+    .verify-badge.unverified { background: rgba(245,158,11,0.1); color: var(--warning); cursor: pointer; border: 1px solid var(--warning); transition: 0.2s;}
+    .verify-badge.unverified:hover { background: var(--warning); color: white; }
+
+    .otp-section { display: none; margin-top: 5px; background: var(--input-bg); padding: 10px; border-radius: 12px; border: 1px dashed var(--primary); }
+    .otp-section input { padding: 8px; font-size: 13px; text-align: center; letter-spacing: 2px; margin-bottom: 5px; display: block !important;}
+    .otp-btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; width: 100%;}
+
+    /* Event Logs */
+    .log-tabs { display: flex; gap: 15px; margin-bottom: 20px; }
+    .tab-btn { padding-bottom: 8px; font-weight: 700; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s;}
+    .tab-btn.active { color: var(--primary); border-color: var(--primary); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .log-row { background: var(--input-bg); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid var(--border); border-left: 4px solid var(--primary);}
+    .log-row.danger { border-left-color: var(--danger); }
+
+    /* 🟢 EDIT MODE TOGGLE LOGIC */
+    body.is-editing .display-value { display: none !important; }
+    body.is-editing .edit-input { display: block !important; }
+    body.is-editing .photo-edit-btn { display: flex !important; }
+    body.is-editing #save-bar { display: block !important; }
+
+    /* Sticky Save Bar */
+    #save-bar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 15px 50px; border-radius: 50px; font-weight: 800; font-size: 1rem; border: none; cursor: pointer; box-shadow: 0 10px 30px rgba(16,185,129,0.3); z-index: 1000; transition: 0.3s; display: none; }
+    #save-bar:hover { transform: translateX(-50%) translateY(-3px); }
+
+    /* Toast */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .modern-toast { background: var(--card); color: var(--text); padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 14px; border-left: 4px solid var(--primary); transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid var(--border); }
+    .modern-toast.show { transform: translateX(0); }
+    .modern-toast.success { border-left-color: var(--success); }
+    .modern-toast.error { border-left-color: var(--danger); }
+
+    /* 🟢 MOBILE OVERRIDE */
+    @media (max-width: 968px) {
+        body { flex-direction: column !important; overflow-y: auto !important; height: auto !important; padding-bottom: 90px !important; }
+        .dashboard { flex-direction: column !important; overflow: visible !important; }
+        
+        .sidebar {
+            position: fixed !important; bottom: 0 !important; left: 0 !important;
+            width: 100% !important; height: 75px !important;
+            flex-direction: row !important; padding: 10px !important;
+            border-radius: 20px 20px 0 0 !important; justify-content: space-around !important;
+            align-items: center !important; z-index: 9999 !important;
+            background: var(--card) !important; border-top: 1px solid var(--border) !important;
+            border-right: none !important;
+        }
+        .sidebar-logo, .sidebar h2, .sidebar > div { display: none !important; }
+        .nav-list { display: flex !important; flex-direction: row !important; width: 100% !important; justify-content: space-around !important; margin: 0 !important; padding: 0 !important; }
+        .nav-item { display: flex !important; flex-direction: column !important; align-items: center !important; gap: 4px !important; padding: 5px !important; margin: 0 !important; width: auto !important; background: transparent !important; color: var(--muted);}
+        .nav-item i { font-size: 20px !important; margin: 0 !important; }
+        .nav-text { font-size: 0.65rem !important; display: block !important; margin: 0 !important; text-align: center; font-weight: 600;}
+        .nav-item.active { background: transparent !important; color: var(--primary) !important; box-shadow: none !important; }
+        .nav-item.active i { transform: translateY(-3px); }
+        .nav-item[onclick*="logoutUser"] { display: none !important; }
+
+        .main { padding: 15px !important; overflow: visible !important; }
+        .info-grid { grid-template-columns: 1fr !important; }
+        .card { padding: 25px 20px !important; }
+        
+        .header-banner { flex-direction: column !important; text-align: center !important; padding: 30px 20px !important; }
+        .header-info h1 { font-size: 1.6rem !important; }
+        .header-info p { justify-content: center !important; }
+        
+        .btn-print { display: none !important; }
+        #save-bar { width: 90% !important; bottom: 90px !important; }
+    }
+</style>
+</head>
+<body id="app-root" data-theme="light">
+
+<div class="toast-container" id="toastBox"></div>
+
+<aside class="sidebar">
+    <img src="assets/logo_health_lens_transparent_both_text_and_logo.png" alt="HealthLens" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+    <h2 style="display:none; color:var(--accent); margin-bottom:50px; font-weight: 800;"><i class="fas fa-lungs"></i> HealthLens</h2>
+    
+    <ul class="nav-list">
+        <li class="nav-item" onclick="location.href='dashboard.html'"><i class="fas fa-th-large"></i> <span class="nav-text">Dashboard</span></li>
+        <li class="nav-item" onclick="location.href='Doctor.html'"><i class="fas fa-user-md"></i> <span class="nav-text">Schedule</span></li>
+        <li class="nav-item" onclick="location.href='report.html'"><i class="fas fa-file-medical-alt"></i> <span class="nav-text">Archive</span></li>
+        <li class="nav-item active"><i class="fas fa-user"></i> <span class="nav-text">Profile</span></li>
+        <li class="nav-item" onclick="location.href='setting.html'"><i class="fas fa-cog"></i> <span class="nav-text">Settings</span></li>
+        
+        <li class="nav-item" onclick="logoutUser()" style="color: var(--danger); margin-top: 15px;">
+            <i class="fas fa-sign-out-alt"></i> <span class="nav-text">Sign Out</span>
+        </li>
+    </ul>
+    
+    <div style="margin-top: auto; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px;">
+        <span style="font-size: 10px; opacity: 0.6; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">System Hub</span><br>
+        <div style="display: flex; align-items: center; margin-top: 5px;" id="sysHubContainer">
+            <div class="status-dot-container">
+                <div class="status-dot-ring"></div>
+                <div class="status-dot-core"></div>
+            </div>
+            <b id="serverStatus" style="color:var(--danger); font-size: 12px; z-index: 10;">OFFLINE</b>
+        </div>
+    </div>
+</aside>
+
+<div class="dashboard">
+    <main class="main">
+        
+        <div class="top-actions">
+            <h2 style="font-weight: 800; font-size: 1.5rem; color: var(--text);">Profile Settings</h2>
+            <div class="btn-group">
+                <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> PRINT</button>
+                <button class="btn btn-edit" id="btnToggleEdit" onclick="toggleEditMode()"><i class="fas fa-pen"></i> EDIT PROFILE</button>
+            </div>
+        </div>
+
+        <div class="header-banner">
+            <div class="avatar-wrapper">
+                <img src="https://api.dicebear.com/7.x/lorelei/svg?seed=User" class="profile-img" id="main-avatar" referrerpolicy="no-referrer">
+                <label class="photo-edit-btn" title="Change Photo">
+                    <i class="fas fa-camera"></i>
+                    <input type="file" style="display:none;" accept="image/*" onchange="previewImage(this)">
+                </label>
+            </div>
+            <div class="header-info">
+                <h1 id="prof-name">Loading...</h1>
+                <p><i class="fas fa-id-card"></i> Security ID: <span id="prof-id">#CL-XXX</span> <span class="admin-badge" id="admin-badge">ADMIN</span></p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-user-circle"></i> Personal Information</h2>
+            <div class="info-grid">
+                
+                <div class="info-item">
+                    <span class="info-label">First Name *</span>
+                    <span class="display-value" data-display="first">--</span>
+                    <input type="text" class="edit-input" data-key="first" placeholder="First Name">
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Last Name *</span>
+                    <span class="display-value" data-display="last">--</span>
+                    <input type="text" class="edit-input" data-key="last" placeholder="Last Name">
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Date of Birth</span>
+                    <span class="display-value" data-display="dob">--</span>
+                    <input type="date" class="edit-input" data-key="dob">
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Gender</span>
+                    <span class="display-value" data-display="gender">--</span>
+                    <select class="edit-input" data-key="gender">
+                        <option value="">Select...</option>
+                        <option>Male</option><option>Female</option><option>Other</option>
+                    </select>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">
+                        Email Address
+                        <span id="badge-email" class="verify-badge"></span>
+                    </span>
+                    <span class="display-value" data-display="email">--</span>
+                    <input type="email" class="edit-input" data-key="email" placeholder="email@domain.com" readonly>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">
+                        Mobile Number
+                        <span id="badge-phone" class="verify-badge"></span>
+                    </span>
+                    <span class="display-value" data-display="mobile">--</span>
+                    <input type="tel" class="edit-input" data-key="mobile" id="input-phone" placeholder="+91 9876543210">
+                    
+                    <div id="recaptcha-container"></div>
+                    <div class="otp-section" id="otp-section">
+                        <span style="font-size: 11px; color: var(--text); font-weight: bold; margin-bottom: 5px; display:block;">Enter 6-Digit OTP</span>
+                        <div style="display:flex; gap:5px;">
+                            <input type="text" id="otp-input" class="edit-input" placeholder="123456" maxlength="6">
+                            <button class="otp-btn" onclick="confirmPhoneOTP()">Verify</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-item" style="grid-column: 1 / -1;">
+                    <span class="info-label">Full Address</span>
+                    <span class="display-value" data-display="address">--</span>
+                    <input type="text" class="edit-input" data-key="address" placeholder="123 Health St, City, Country">
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-notes-medical"></i> Medical & Vitals</h2>
+            <div class="info-grid">
+                
+                <div class="info-item">
+                    <span class="info-label">Blood Group</span>
+                    <span class="display-value" data-display="blood">--</span>
+                    <select class="edit-input" data-key="blood">
+                        <option value="">Select</option>
+                        <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                        <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+                    </select>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Blood Pressure</span>
+                    <span class="display-value" data-display="bp">--</span>
+                    <input type="text" class="edit-input" data-key="bp" placeholder="120/80">
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Weight (kg)</span>
+                    <span class="display-value" data-display="weight">--</span>
+                    <input type="number" class="edit-input" data-key="weight" placeholder="kg">
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Height (cm)</span>
+                    <span class="display-value" data-display="height">--</span>
+                    <input type="number" class="edit-input" data-key="height" placeholder="cm">
+                </div>
+
+                <div class="info-item" style="grid-column: 1 / -1;">
+                    <span class="info-label">Known Allergies</span>
+                    <span class="display-value" data-display="allergies">None</span>
+                    <input type="text" class="edit-input" data-key="allergies" placeholder="Peanuts, Penicillin, etc.">
+                </div>
+
+                <div class="info-item" style="grid-column: 1 / -1;">
+                    <span class="info-label">Chronic Conditions</span>
+                    <span class="display-value" data-display="chronic">None</span>
+                    <input type="text" class="edit-input" data-key="chronic" placeholder="Asthma, Diabetes, etc.">
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="log-tabs">
+                <span class="tab-btn active" onclick="switchLogTab(event, 'future')">Future Appointments</span>
+                <span class="tab-btn" onclick="switchLogTab(event, 'past')">Past Logs</span>
+            </div>
+            <div id="future" class="tab-content active"></div>
+            <div id="past" class="tab-content"></div>
+        </div>
+
+    </main>
+
+    <button id="save-bar" onclick="saveProfileData()">SAVE CHANGES</button>
+</div>
+
+<script src="global.js"></script>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signOut, sendEmailVerification, RecaptchaVerifier, linkWithPhoneNumber, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyA90dg3eiX0aSqDATaU2ZdR-G10-elrva0",
+        authDomain: "healthlens-5b6d9.firebaseapp.com",
+        projectId: "healthlens-5b6d9",
+        storageBucket: "healthlens-5b6d9.firebasestorage.app",
+        messagingSenderId: "43708270749",
+        appId: "1:43708270749:web:4d2f1b476dbc159f426c74"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // 🟢 NEW: Automatically pull Google Data into Profile on load
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const activeUser = localStorage.getItem('activeClinician') || user.displayName || "Guest";
+            const storageKey = activeUser ? `profileData_${activeUser}` : "profileData_guest";
+            let p = JSON.parse(localStorage.getItem(storageKey)) || {};
+
+            let updated = false;
+            
+            if (!p.email && user.email) { p.email = user.email; updated = true; }
+            
+            if (!p.name && user.displayName) { 
+                p.name = user.displayName; 
+                const nameParts = user.displayName.split(" ");
+                p.first = nameParts[0];
+                p.last = nameParts.slice(1).join(" ");
+                updated = true; 
+            }
+            
+            if (user.photoURL) { 
+                p.avatar = user.photoURL; 
+                localStorage.setItem('healthlens_user_avatar', user.photoURL);
+                updated = true; 
+            }
+
+            if (updated) {
+                localStorage.setItem(storageKey, JSON.stringify(p));
+                if (typeof window.renderProfileData === 'function') window.renderProfileData();
+            }
+        }
+    });
+
+    // Log Out
+    window.logoutUser = function() {
+        signOut(auth).then(() => {
+            localStorage.clear();
+            window.location.href = 'index.html'; 
+        });
+    };
+
+    // Firebase Image & Data Sync
+    window.syncProfileToFirebase = async function(profileData, base64Avatar) {
+        const user = auth.currentUser;
+        if (user) {
+            const docRef = doc(db, "clinicians", user.uid);
+            const payload = {
+                firstName: profileData.first || "",
+                lastName: profileData.last || "",
+                phone: profileData.mobile || null,
+            };
+            if (base64Avatar && base64Avatar.includes('base64')) payload.profileImgBase64 = base64Avatar;
+            try { await setDoc(docRef, payload, { merge: true }); return true; } catch (e) { return false; }
+        }
+        return false;
+    };
+
+    // Firebase Email Verification
+    window.verifyEmailNow = function() {
+        const user = auth.currentUser;
+        if(user && !user.emailVerified) {
+            sendEmailVerification(user).then(() => {
+                showToast("Verification link sent! Check your email inbox.", "success");
+            }).catch(err => showToast(err.message, "error"));
+        } else if (user && user.emailVerified) {
+            showToast("Email is already verified.", "success");
+        } else {
+            showToast("Please log in with Email to verify.", "error");
+        }
+    };
+
+    // Firebase Phone Verification (Recaptcha)
+    window.initRecaptcha = function() {
+        if(!window.recaptchaVerifier) {
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'btn-verify-phone', {
+                'size': 'invisible'
+            });
+        }
+    };
+
+    window.sendPhoneOTP = function() {
+        const user = auth.currentUser;
+        if(!user) return showToast("Must be logged in.", "error");
+        
+        const phone = document.getElementById('input-phone').value;
+        if(!phone || phone.length < 10) return showToast("Enter a valid phone number (with country code e.g. +91).", "error");
+
+        window.initRecaptcha();
+        const btn = document.getElementById('btn-verify-phone');
+        btn.innerText = "Sending...";
+        btn.style.pointerEvents = 'none';
+
+        linkWithPhoneNumber(user, phone, window.recaptchaVerifier).then((res) => {
+            window.confirmationResult = res;
+            document.getElementById('otp-section').style.display = 'block';
+            showToast("OTP Sent to your phone!", "success");
+            btn.innerText = "Sent";
+        }).catch((err) => {
+            btn.innerText = "Verify";
+            btn.style.pointerEvents = 'auto';
+            showToast("Error sending OTP. Use a test number.", "error");
+        });
+    };
+
+    window.confirmPhoneOTP = function() {
+        const code = document.getElementById('otp-input').value;
+        if(!code) return showToast("Enter OTP code.", "error");
+        
+        window.confirmationResult.confirm(code).then(() => {
+            document.getElementById('otp-section').style.display = 'none';
+            document.getElementById('badge-phone').innerHTML = `<span class="verify-badge verified"><i class="fas fa-check-circle"></i> VERIFIED</span>`;
+            
+            // Save state to local storage
+            const activeUser = localStorage.getItem('activeClinician');
+            const storageKey = activeUser ? `profileData_${activeUser}` : "profileData_guest";
+            let p = JSON.parse(localStorage.getItem(storageKey)) || {};
+            p.phoneVerified = true;
+            localStorage.setItem(storageKey, JSON.stringify(p));
+
+            showToast("Phone successfully verified!", "success");
+        }).catch(() => {
+            showToast("Invalid OTP Code.", "error");
+        });
+    };
+</script>
+
+<script>
+    // Toast
+    const toastSound = new Audio('https://actions.google.com/sounds/v1/ui/message_notification.ogg');
+    window.showToast = function(message, type = 'success') {
+        const box = document.getElementById('toastBox');
+        if(!box) return;
+        const toast = document.createElement('div');
+        toast.className = `modern-toast ${type}`;
+        const icon = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-triangle"></i>';
+        toast.innerHTML = `${icon} ${message}`;
+        box.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3000);
+    }
+
+    // Toggle Edit Mode (Controlled strictly by buttons)
+    window.toggleEditMode = function() {
+        const body = document.body;
+        const btnDesk = document.getElementById('btnToggleEdit');
+        
+        if (body.classList.contains('is-editing')) {
+            body.classList.remove('is-editing');
+            btnDesk.innerHTML = '<i class="fas fa-pen"></i> EDIT PROFILE';
+            btnDesk.style.background = 'var(--primary)';
+            window.renderProfileData(); // Revert unsaved changes
+        } else {
+            body.classList.add('is-editing');
+            btnDesk.innerHTML = '<i class="fas fa-times"></i> CANCEL EDIT';
+            btnDesk.style.background = 'var(--danger)';
+        }
+    }
+
+    // Local Image Preview
+    window.previewImage = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('main-avatar').src = e.target.result;
+                showToast('Photo updated locally. Click Save to apply.', 'success');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Event Logs Tabs
+    window.switchLogTab = function(evt, tabId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        evt.currentTarget.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    // Date formatter
+    function toYYYYMMDD(dateObj) {
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
+    }
+
+    // Load & Render Data
+    window.renderProfileData = function() {
+        const activeUser = localStorage.getItem('activeClinician');
+        const role = localStorage.getItem('healthlens_role');
+        const storageKey = activeUser ? `profileData_${activeUser}` : "profileData_guest";
+        let p = JSON.parse(localStorage.getItem(storageKey)) || {};
+
+        // Load Avatar
+        const savedAvatar = localStorage.getItem('healthlens_user_avatar') || p.avatar;
+        if(savedAvatar && savedAvatar !== "null") document.getElementById('main-avatar').src = savedAvatar;
+        else document.getElementById('main-avatar').src = "https://api.dicebear.com/7.x/lorelei/svg?seed=User";
+
+        // Generate full name from first/last if missing 'name'
+        let fullName = p.name;
+        if(!fullName && (p.first || p.last)) fullName = `${p.first || ''} ${p.last || ''}`.trim();
+        if(!fullName) fullName = activeUser || "New Patient";
+
+        document.getElementById('prof-name').innerText = fullName;
+
+        // Set Security ID & Admin Badge
+        if (role === 'admin' && activeUser) {
+            document.getElementById('admin-badge').style.display = 'inline-block';
+            const adminIds = { 'Nikhil': 'CL-200328', 'Yadvi': 'CL-YADVI30', 'Shefali': 'CL-SHEF09', 'Piyush': 'CL-PIY123' };
+            document.getElementById('prof-id').innerText = adminIds[activeUser] || `#CL-${activeUser.toUpperCase()}`;
+        } else {
+            document.getElementById('admin-badge').style.display = 'none';
+            if(!p.patientId) {
+                p.patientId = `PX-${Math.floor(1000 + Math.random() * 9000)}`;
+                localStorage.setItem(storageKey, JSON.stringify(p));
+            }
+            document.getElementById('prof-id').innerText = p.patientId;
+        }
+
+        // Fill Inputs and Spans
+        document.querySelectorAll('.edit-input').forEach(input => {
+            const key = input.getAttribute('data-key');
+            if(key) {
+                input.value = p[key] || "";
+                const displaySpan = document.querySelector(`.display-value[data-display="${key}"]`);
+                if(displaySpan) {
+                    displaySpan.innerText = p[key] || "--";
+                    if(!p[key]) displaySpan.style.color = "var(--danger)";
+                    else displaySpan.style.color = "var(--text)";
+                }
+            }
+        });
+
+        // Verification Badges Logic
+        const emailBadge = document.getElementById('badge-email');
+        if(p.email) {
+            emailBadge.innerHTML = `<span class="verify-badge verified"><i class="fas fa-check-circle"></i> VERIFIED</span>`;
+            document.querySelector('input[data-key="email"]').setAttribute('readonly', 'true');
+        } else {
+            emailBadge.innerHTML = `<span class="verify-badge unverified" onclick="verifyEmailNow()"><i class="fas fa-exclamation-circle"></i> VERIFY</span>`;
+        }
+
+        const phoneBadge = document.getElementById('badge-phone');
+        if(p.phoneVerified) {
+            phoneBadge.innerHTML = `<span class="verify-badge verified"><i class="fas fa-check-circle"></i> VERIFIED</span>`;
+        } else {
+            phoneBadge.innerHTML = `<span class="verify-badge unverified" id="btn-verify-phone" onclick="sendPhoneOTP()"><i class="fas fa-exclamation-circle"></i> VERIFY</span>`;
+        }
+
+        // Render Logs
+        renderLogs(activeUser);
+    }
+
+    function renderLogs(activeUser) {
+        const futureBox = document.getElementById('future');
+        const pastBox = document.getElementById('past');
+        if(!futureBox || !pastBox) return;
+        futureBox.innerHTML = ''; pastBox.innerHTML = '';
+
+        const userBookings = JSON.parse(localStorage.getItem(`doctorBookings_${activeUser}`)) || {};
+        const userEvents = JSON.parse(localStorage.getItem(`calendarEvents_${activeUser}`)) || {};
+        const todayStr = toYYYYMMDD(new Date());
+        
+        let allLogs = [];
+        Object.entries(userBookings).forEach(([dateStr, times]) => {
+            Object.entries(times).forEach(([time, docName]) => allLogs.push({ dateStr, title: docName, time, type: 'appointment' }));
+        });
+        Object.entries(userEvents).forEach(([jsDate, events]) => {
+            events.forEach(ev => allLogs.push({ dateStr: toYYYYMMDD(new Date(jsDate)), title: ev.title, time: 'All Day', type: 'event' }));
+        });
+
+        allLogs.sort((a, b) => new Date(a.dateStr) - new Date(b.dateStr));
+        let hasFuture = false, hasPast = false;
+
+        allLogs.forEach(log => {
+            const isFuture = log.dateStr >= todayStr;
+            const color = log.type === 'appointment' ? 'danger' : 'primary';
+            const icon = log.type === 'appointment' ? '<i class="fas fa-stethoscope"></i>' : '<i class="fas fa-calendar-check"></i>';
+            const html = `
+                <div class="log-row ${log.type === 'appointment' ? 'danger' : ''}">
+                    <div>
+                        <b style="font-size:14px; color:var(--text);">${log.dateStr} - ${log.time}</b><br>
+                        <span style="font-size:12px; color:var(--muted); margin-top:4px; display:inline-block;">${icon} ${log.title}</span>
+                    </div>
+                </div>`;
+            if(isFuture) { futureBox.innerHTML += html; hasFuture = true; }
+            else { pastBox.innerHTML = html + pastBox.innerHTML; hasPast = true; } 
+        });
+
+        if(!hasFuture) futureBox.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--muted); font-size: 13px;">No upcoming events.</div>`;
+        if(!hasPast) pastBox.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--muted); font-size: 13px;">No past history.</div>`;
+    }
+
+    // Save Data
+    window.saveProfileData = async function() {
+        const activeUser = localStorage.getItem('activeClinician');
+        const storageKey = activeUser ? `profileData_${activeUser}` : "profileData_guest";
+        let p = JSON.parse(localStorage.getItem(storageKey)) || {};
+
+        let hasError = false;
+        document.querySelectorAll('.edit-input[data-key]').forEach(input => {
+            const key = input.getAttribute('data-key');
+            p[key] = input.value;
+            if(key === 'first' && !input.value.trim()) { input.classList.add('input-error'); hasError=true;}
+            else input.classList.remove('input-error');
+        });
+
+        if (hasError) return showToast("First Name is required.", "error");
+
+        // Combine first and last into name for global usage
+        p.name = `${p.first || ''} ${p.last || ''}`.trim();
+
+        const saveBar = document.getElementById('save-bar');
+        saveBar.innerText = "SAVING..."; saveBar.style.opacity = '0.7';
+
+        const avatarSrc = document.getElementById('main-avatar').src;
+        if(avatarSrc.includes('base64')) {
+            localStorage.setItem('healthlens_user_avatar', avatarSrc);
+            p.avatar = avatarSrc; 
+            if(window.syncProfileToFirebase) await window.syncProfileToFirebase(p, avatarSrc);
+        }
+
+        localStorage.setItem(storageKey, JSON.stringify(p));
+        if (p.name && localStorage.getItem('healthlens_role') !== 'admin') localStorage.setItem('activeClinician', p.name);
+
+        showToast("Profile secured and updated!", "success");
+        setTimeout(() => { toggleEditMode(); }, 500);
+    }
+
+    // Initialization
+    document.addEventListener('DOMContentLoaded', () => {
+        const isLoggedIn = localStorage.getItem('healthlens_logged_in') === 'true';
+        if (!isLoggedIn) { window.location.href = "login.html"; return; }
+        window.renderProfileData();
+    });
+</script>
+
+</body>
+</html>

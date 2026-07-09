@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HealthLens | ChestAI Prediction Framework</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="assets/Favicon_HealthLens.png">
+    
+    <link rel="stylesheet" href="global.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --circle-bg: #6bbdf8;
+        }
+        [data-theme="dark"] {
+            --circle-bg: #1e3a8a;
+            --nav-bg: #0a0a0a; 
+            --border-color: #262626;
+        }
+
+        /* 🟢 SPLASH SCREEN ANIMATIONS */
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulseLogo { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        
+        .splash-spinner {
+            width: 40px; height: 40px;
+            border: 4px solid rgba(42, 127, 186, 0.2);
+            border-top-color: #2a7fba;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 8%;
+            background: var(--nav-bg);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow-sm);
+            border-bottom: 1px solid var(--border-color); 
+            transition: var(--transition);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-img { height: 40px; width: auto; }
+        .logo-text { font-size: 1.5rem; font-weight: 800; color: var(--primary-blue); }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            margin-left: auto;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover { color: var(--primary-blue); }
+
+        .nav-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        #auth-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .global-theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .global-theme-toggle:hover {
+            background: var(--bg-color);
+            color: var(--primary-blue);
+        }
+
+        .profile-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-blue);
+            object-fit: cover;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .profile-avatar:hover {
+            box-shadow: 0 0 10px rgba(42, 127, 186, 0.5);
+            transform: scale(1.05);
+        }
+
+        .btn-logout {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 8px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .hero {
+            display: flex;
+            align-items: center;
+            min-height: 90vh;
+            background: var(--bg-gradient);
+            padding: 0 8%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-text {
+            flex: 1;
+            max-width: 550px;
+            z-index: 10;
+        }
+
+        .hero-text h1 {
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin-bottom: 25px;
+            font-weight: 800;
+        }
+
+        .hero-text h1 span { color: var(--primary-blue); }
+
+        .hero-text p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 35px;
+            line-height: 1.6;
+        }
+
+        .hero-img-container {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            height: 100%;
+            width: 45%;
+            z-index: 5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .hero-img-container::before {
+            content: "";
+            position: absolute;
+            width: 420px;
+            height: 420px;
+            background: var(--circle-bg);
+            border-radius: 50%;
+            bottom: 50px;
+            right: 70px;
+            z-index: -1;
+            transition: var(--transition);
+        }
+
+        .doctor-img {
+            max-height: 95%;
+            width: auto;
+            object-fit: contain;
+            position: relative;
+            z-index: 2;
+        }
+
+        .floating-card {
+            position: absolute;
+            background: var(--card-bg);
+            padding: 12px 18px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 15;
+            animation: float 4s ease-in-out infinite;
+            border: 1px solid rgba(42, 127, 186, 0.2);
+            transition: var(--transition);
+        }
+
+        .card-icon {
+            background: rgba(42, 127, 186, 0.1);
+            padding: 6px 10px;
+            border-radius: 8px;
+            color: var(--primary-blue);
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .card-text b { display: block; font-size: 0.8rem; color: var(--text-main); }
+        .card-text span { font-size: 0.65rem; color: var(--text-muted); }
+
+        .card-tb { top: 25%; right: 27%; animation-delay: 1s; }
+        .card-model { bottom: 39%; right: 32.5%; animation-delay: 1.5s; }
+        .card-covid { bottom: 15%; right: 35%; animation-delay: 2s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 80px 8%;
+            background: var(--nav-bg);
+        }
+
+        .f-card {
+            padding: 40px 30px;
+            border-radius: 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            border-top: 4px solid var(--primary-blue);
+        }
+
+        .f-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .f-card i { color: var(--primary-blue); margin-bottom: 20px; width: 32px; height: 32px; }
+        .f-card h3 { color: var(--primary-blue); margin-bottom: 15px; font-size: 1.2rem; }
+        .f-card p { color: var(--text-muted); line-height: 1.6; font-size: 0.95rem; }
+
+        .menu-toggle { display: none; background: none; border: none; color: var(--text-main); cursor: pointer; }
+
+        @media (max-width: 968px) {
+            .hero { flex-direction: column; text-align: center; padding-top: 60px; }
+            .hero-text { margin-bottom: 40px; max-width: 100%; }
+            .hero-text h1 { font-size: 2.5rem; }
+            .hero-img-container { position: relative; width: 100%; height: 350px; bottom: auto; right: auto; }
+            .hero-img-container::before { width: 250px; height: 250px; bottom: 0; right: auto; }
+            .floating-card { display: none; } 
+            .nav-links { display: none; }
+            .menu-toggle { display: block; }
+            .nav-right { gap: 15px; margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="appSplashScreen" style="position: fixed; inset: 0; z-index: 2147483647; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease-out, visibility 0.5s;">
+        <img id="splashLogo" alt="HealthLens" style="width: 80%; max-width: 260px; height: auto; object-fit: contain; margin-bottom: 50px; animation: pulseLogo 2s infinite; display: none;">
+        <div style="display: flex; flex-direction: column; align-items: center; position: absolute; bottom: 15%;">
+            <div class="splash-spinner"></div>
+            <p id="splashText" style="margin-top: 15px; font-weight: 700; font-size: 12px; letter-spacing: 2px;">LOADING SECURE PORTAL</p>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('healthlens_theme') || 'light';
+            const splash = document.getElementById('appSplashScreen');
+            const logo = document.getElementById('splashLogo');
+            const text = document.getElementById('splashText');
+
+            if (savedTheme === 'dark') {
+                splash.style.backgroundColor = '#0b0f19'; 
+                logo.src = 'assets/logo_health_lens_transparent_for_dark_mode_only_name.png';
+                text.style.color = '#94a3b8';
+            } else {
+                splash.style.backgroundColor = '#f4f7fe'; 
+                logo.src = 'assets/logo_health_lens_transparent_only_text.png';
+                text.style.color = '#64748b';
+            }
+            
+            logo.style.display = 'block';
+
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    if(splash) {
+                        splash.style.opacity = '0';
+                        splash.style.visibility = 'hidden';
+                        setTimeout(() => splash.remove(), 500);
+                    }
+                }, 1200); 
+            });
+        })();
+    </script>
+
+    <nav>
+        <a href="index.html" class="logo-container">
+            <img src="assets/logo_health_lens_transparent_only_logo.png" alt="HealthLens Logo" class="logo-img" onerror="this.style.display='none'">
+            <span class="logo-text">HealthLens</span>
+        </a>
+
+        <div class="nav-right">
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="Services.html">Services</a></li>
+                <li><a href="Library.html">Library</a></li>
+                <li><a href="insights.html">Insights</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <button class="global-theme-toggle" onclick="toggleGlobalTheme()" aria-label="Toggle Theme">
+                    <i data-lucide="moon"></i>
+                </button>
+                
+                <div id="auth-container">
+                    <a href="login.html" class="btn btn-blue" id="login-btn" style="padding: 10px 25px; font-size: 0.85rem;">
+                        Clinician Login
+                    </a>
+                    
+                    <a href="#" id="profile-btn" style="display: none;" title="Your Profile">
+                        <img src="https://api.dicebear.com/7.x/initials/svg?seed=User" alt="Profile" class="profile-avatar" id="nav-profile-img">
+                    </a>
+
+                    <button id="logout-btn" class="btn-logout" style="display: none;" title="Secure Logout" onclick="processLogout()">
+                        <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                    </button>
+                </div>
+
+                <button class="menu-toggle"><i data-lucide="menu"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-text">
+            <h1 id="hero-heading">Automated <span>Chest Disease</span> Prediction Framework</h1>
+            <p>
+                An AI-driven screening framework utilizing <b>Deep Transfer Learning (ResNet50)</b> to provide 
+                high-sensitivity diagnostic aids for Tuberculosis and COVID-19 detection.
+            </p>
+            <a href="dashboard.html" class="btn btn-blue" id="hero-action-btn" style="padding: 16px 40px; font-size: 1.1rem;">
+                Access Prediction Tool
+            </a>
+        </div>
+
+        <div class="hero-img-container">
+            <img src="assets/doctor transparent.png" alt="Specialist" class="doctor-img">
+        </div>
+
+        <div class="floating-card card-tb">
+            <div class="card-icon">98.1%</div>
+            <div class="card-text"><b>TB Recall</b><span>Diagnostic Safety</span></div>
+        </div>
+
+        <div class="floating-card card-model">
+            <div class="card-icon">CNN</div>
+            <div class="card-text"><b>ResNet50 Core</b><span>Deep Learning</span></div>
+        </div>
+
+        <div class="floating-card card-covid">
+            <div class="card-icon">97.5%</div>
+            <div class="card-text"><b>COVID-19 Recall</b><span>ResNet50 Inference</span></div>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="f-card">
+            <i data-lucide="activity"></i>
+            <h3>High Sensitivity</h3>
+            <p>Framework optimized to maximize diagnostic Recall, ensuring no critical cases are missed during screening.</p>
+        </div>
+        <div class="f-card">
+            <i data-lucide="stethoscope"></i>
+            <h3>Automated Triage</h3>
+            <p>Designed as a front-line radiographic screening tool for low-resource healthcare infrastructure.</p>
+        </div>
+        <div class="f-card">
+            <i data-lucide="cpu"></i>
+            <h3>ResNet50 Framework</h3>
+            <p>Utilizing residual learning to capture complex radiographic patterns in chest X-ray images.</p>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+
+            const isLoggedIn = localStorage.getItem('healthlens_logged_in') === 'true';
+            
+            if (isLoggedIn) {
+                const userAvatar = localStorage.getItem('healthlens_user_avatar');
+                const userName = localStorage.getItem('activeClinician') || localStorage.getItem('healthlens_username') || "Doctor";
+
+                document.getElementById('login-btn').style.display = 'none';
+                document.getElementById('profile-btn').style.display = 'block';
+                document.getElementById('logout-btn').style.display = 'flex';
+                
+                if (userAvatar) {
+                    document.getElementById('nav-profile-img').src = userAvatar;
+                }
+
+                document.getElementById('hero-heading').innerHTML = `Welcome back,<br><span>${userName}</span>`;
+            } else {
+                // If not logged in, make the big hero button go to the login page!
+                document.getElementById('hero-action-btn').href = 'login.html';
+            }
+        });
+
+        function processLogout() {
+            const theme = localStorage.getItem('healthlens_theme');
+            localStorage.clear(); 
+            if (theme) localStorage.setItem('healthlens_theme', theme);
+            window.location.href = 'index.html'; // Now redirects back to home instead of forcing login!
+        }
+    </script>
+
+    <script src="global.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ARYAN — HealthLens AI</title>
+  <meta name="description" content="ARYAN — Adaptive Responsive Youth AI Navigator. Intelligent healthcare assistant for HealthLens." />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="aryan-chatbot.css">
+  
+  <style>
+    /* Classic HealthLens Demo Background */
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:linear-gradient(135deg,#060c1a 0%,#0d1b3e 40%,#061228 70%,#0a0e20 100%);min-height:100vh;font-family:'Inter',sans-serif;overflow-x:hidden;}
+    
+    .demo-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+    .demo-orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.18}
+    .demo-orb.o1{width:620px;height:620px;background:radial-gradient(circle,#2563eb,transparent);top:-160px;left:-120px;animation:orb1 12s ease-in-out infinite}
+    .demo-orb.o2{width:520px;height:520px;background:radial-gradient(circle,#06b6d4,transparent);bottom:-120px;right:-90px;animation:orb2 10s ease-in-out infinite}
+    .demo-orb.o3{width:320px;height:320px;background:radial-gradient(circle,#8b5cf6,transparent);top:55%;left:50%;animation:orb3 15s ease-in-out infinite}
+    
+    @keyframes orb1{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,80px)}}
+    @keyframes orb2{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,-60px)}}
+    @keyframes orb3{0%,100%{transform:translate(-50%,-50%)}33%{transform:translate(-60%,-40%)}66%{transform:translate(-40%,-60%)}}
+    
+    .demo-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(37,99,235,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.04) 1px,transparent 1px);background-size:48px 48px;z-index:0}
+    .demo-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:44px 24px;text-align:center}
+    
+    .demo-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.28);border-radius:100px;padding:7px 18px;margin-bottom:28px;font-size:12.5px;color:#60a5fa;font-weight:600;letter-spacing:0.3px}
+    .demo-badge .live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:live-blink 1.8s ease-in-out infinite}
+    @keyframes live-blink{0%,100%{opacity:1}50%{opacity:0.3}}
+    
+    h1.demo-h1{font-size:clamp(44px,9vw,82px);font-weight:900;font-family:'Space Grotesk',sans-serif;background:linear-gradient(135deg,#fff 0%,#93c5fd 35%,#67e8f9 65%,#a78bfa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.04em;line-height:1.08;margin-bottom:14px}
+    .demo-tagline{font-size:17px;color:rgba(255,255,255,0.52);font-weight:400;line-height:1.75;max-width:500px;margin-bottom:8px}
+    .demo-sub{font-size:13px;color:rgba(255,255,255,0.26);margin-bottom:48px}
+    .demo-sub kbd{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:2px 8px;font-size:11px;font-family:'Inter',monospace;color:#fff;}
+    
+    .demo-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;max-width:780px;width:100%;margin-bottom:40px}
+    .demo-card{background:rgba(255,255,255,0.04);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.07);border-radius:20px;padding:20px 15px;transition:all 0.25s;cursor:default}
+    .demo-card:hover{background:rgba(37,99,235,0.09);border-color:rgba(37,99,235,0.28);transform:translateY(-4px);box-shadow:0 12px 32px rgba(37,99,235,0.12)}
+    .demo-card-icon{font-size:28px;margin-bottom:10px;}
+    .demo-card-title{font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:4px}
+    .demo-card-desc{font-size:11.5px;color:rgba(255,255,255,0.38);line-height:1.55}
+    
+    .demo-links{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+    .demo-link{display:inline-flex;align-items:center;gap:8px;color:#60a5fa;font-size:13px;font-weight:600;text-decoration:none;padding:9px 20px;border:1px solid rgba(96,165,250,0.3);border-radius:20px;transition:all 0.2s}
+    .demo-link:hover{background:rgba(96,165,250,0.09);border-color:rgba(96,165,250,0.5);transform:translateY(-2px)}
+    
+    @media(max-width:480px){.demo-content{padding:28px 16px}.demo-cards{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+  <div class="demo-bg">
+    <div class="demo-orb o1"></div>
+    <div class="demo-orb o2"></div>
+    <div class="demo-orb o3"></div>
+    <div class="demo-grid"></div>
+  </div>
+
+  <div class="demo-content">
+    <div class="demo-badge">
+      <span class="live-dot"></span>
+      Live &mdash; Gemini 1.5 Flash
+    </div>
+    <h1 class="demo-h1">ARYAN</h1>
+    <p class="demo-tagline">Adaptive Responsive Youth AI Navigator<br>Your intelligent healthcare assistant for HealthLens</p>
+    <p class="demo-sub">Click the button bottom-right to open &nbsp;<kbd>/</kbd>&nbsp; for commands &nbsp;<kbd>@Yadvi30</kbd>&nbsp; for special mode</p>
+
+    <div class="demo-cards">
+      <div class="demo-card"><div class="demo-card-icon">🏥</div><div class="demo-card-title">Health Q&amp;A</div><div class="demo-card-desc">Intelligent medical guidance powered by Gemini AI</div></div>
+      <div class="demo-card"><div class="demo-card-icon">🧭</div><div class="demo-card-title">Smart Navigation</div><div class="demo-card-desc">Navigates all 10 HealthLens pages automatically</div></div>
+      <div class="demo-card"><div class="demo-card-icon">🫁</div><div class="demo-card-title">Chest Disease AI</div><div class="demo-card-desc">Supports ResNet50-powered X-ray analysis</div></div>
+      <div class="demo-card"><div class="demo-card-icon">💕</div><div class="demo-card-title">Emotional AI</div><div class="demo-card-desc">200+ stickers, special modes, birthday events</div></div>
+      <div class="demo-card"><div class="demo-card-icon">🎙️</div><div class="demo-card-title">Voice Support</div><div class="demo-card-desc">Speak to ARYAN, hear responses aloud</div></div>
+      <div class="demo-card"><div class="demo-card-icon">⚡</div><div class="demo-card-title">Action Engine</div><div class="demo-card-desc">Navigates, clicks, fills forms on your behalf</div></div>
+      <div class="demo-card"><div class="demo-card-icon">🚨</div><div class="demo-card-title">Emergency Mode</div><div class="demo-card-desc">Instant first aid, contacts, critical guidance</div></div>
+      <div class="demo-card"><div class="demo-card-icon">🌙</div><div class="demo-card-title">Premium UI</div><div class="demo-card-desc">Clean glassmorphism design, fast response</div></div>
+    </div>
+
+    <div class="demo-links">
+      <a href="profile.html" class="demo-link">🤖 View ARYAN Profile</a>
+    </div>
+  </div>
+
+  <script>
+    window.ARYAN_CONFIG = {
+      geminiApiKey: 'AIzaSyBT4bSQSwTxkmiAFdGrAxPnmQ0C54s3kdo',
+      apiBase: '/api',
+      assetsBase: 'assets/ARYAN',
+      currentPage: 'index.html',
+      pages: {
+        dashboard:'dashboard.html', doctor:'Doctor.html', report:'report.html',
+        profile:'profile.html', services:'Services.html', library:'Library.html',
+        insights:'insights.html', settings:'setting.html', login:'login.html',
+        calendar:'Calander.html', index:'index.html'
+      }
+    };
+  </script>
+  <script src="aryan-chatbot.js"></script>
+</body>
+</html>

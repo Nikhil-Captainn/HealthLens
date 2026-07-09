@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARYAN - HealthLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --hl-blue: #2a7fba;
+    --hl-dark: #1a252f;
+    --hl-green: #27ae60;
+    --hl-rose: #e91e8c;
+    --hl-rose-bg: linear-gradient(135deg, #fff0f6 0%, #ffe4f0 50%, #ffd6e8 100%);
+    --chat-bg: #f0f4f8;
+    --msg-user: #dcf8c6;
+    --msg-ai: #ffffff;
+    --border: #e0e7ef;
+    --text-main: #1a252f;
+    --text-muted: #7f8c8d;
+    --text-light: #b2bec3;
+    --shadow: 0 8px 32px rgba(42,127,186,0.18), 0 2px 8px rgba(0,0,0,0.10);
+    --shadow-fab: 0 4px 20px rgba(42,127,186,0.35);
+    --radius: 18px;
+    --radius-sm: 10px;
+    --font-main: 'Outfit', sans-serif;
+    --font-chat: 'Nunito', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-main);
+    background: #e8ecf0;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 24px;
+  }
+
+  /* === FAB BUTTON (sleeping ARYAN) === */
+  #aryan-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: var(--hl-blue);
+    box-shadow: var(--shadow-fab);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 9999;
+    border: 3px solid white;
+    overflow: hidden;
+  }
+  #aryan-fab:hover { transform: scale(1.08); }
+  #aryan-fab.active { transform: scale(0); opacity: 0; pointer-events: none; }
+  #aryan-fab img {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    border-radius: 50%;
+  }
+  .fab-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(42,127,186,0.3);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+  .fab-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 18px;
+    height: 18px;
+    background: #e74c3c;
+    border-radius: 50%;
+    border: 2px solid white;
+    font-size: 9px;
+    font-weight: 800;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* === MINI CHAT WINDOW === */
+  #aryan-mini {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 370px;
+    height: 580px;
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    z-index: 9998;
+    overflow: hidden;
+    transform: scale(0.85) translateY(30px);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: bottom right;
+  }
+  #aryan-mini.open {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* === HEADER === */
+  .aryan-header {
+    background: var(--hl-dark);
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    border-bottom: 2px solid var(--hl-blue);
+    flex-shrink: 0;
+  }
+  .aryan-header.rose-mode {
+    background: linear-gradient(135deg, #c2185b, #e91e8c);
+    border-bottom-color: #f8bbd9;
+  }
+  .header-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .header-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: all 0.4s ease;
+  }
+  .header-info { flex: 1; }
+  .header-name {
+    color: white;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.2px;
+  }
+  .header-status {
+    font-size: 11px;
+    color: rgba(255,255,255,0.65);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 1px;
+  }
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #2ecc71;
+    animation: blink 1.5s infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .header-actions { display: flex; gap: 8px; }
+  .header-btn {
+    background: rgba(255,255,255,0.12);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: background 0.2s;
+  }
+  .header-btn:hover { background: rgba(255,255,255,0.22); }
+
+  /* === GREETING BANNER === */
+  .greeting-banner {
+    background: linear-gradient(135deg, #e8f4fd 0%, #f0f8e8 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .greeting-banner.hidden { display: none; }
+  .greeting-text { flex: 1; }
+  .greeting-text h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--hl-dark);
+  }
+  .greeting-text p {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .greeting-time {
+    font-size: 11px;
+    color: var(--hl-blue);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* === TOPIC PILLS === */
+  .topics-strip {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .topics-strip.hidden { display: none; }
+  .topics-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 7px;
+  }
+  .topics-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .topic-pill {
+    background: #eef7ff;
+    border: 1px solid #cce4f8;
+    color: var(--hl-blue);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-chat);
+  }
+  .topic-pill:hover {
+    background: var(--hl-blue);
+    color: white;
+    border-color: var(--hl-blue);
+    transform: translateY(-1px);
+  }
+
+  /* === CHAT MESSAGES === */
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--chat-bg);
+    scroll-behavior: smooth;
+    font-family: var(--font-chat);
+  }
+  .chat-messages.rose-bg {
+    background: var(--hl-rose-bg);
+  }
+
+  .msg-row { display: flex; gap: 8px; align-items: flex-end; }
+  .msg-row.user { flex-direction: row-reverse; }
+
+  .msg-avatar-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(42,127,186,0.2);
+  }
+  .msg-avatar-sm img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #eef7ff;
+  }
+  .msg-row.user .msg-avatar-sm { display: none; }
+
+  .msg-bubble {
+    max-width: 76%;
+    padding: 9px 13px;
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.55;
+    position: relative;
+    word-break: break-word;
+  }
+  .msg-bubble.ai {
+    background: var(--msg-ai);
+    color: var(--text-main);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+  .msg-bubble.user {
+    background: var(--msg-user);
+    color: var(--text-main);
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+  .msg-bubble.rose {
+    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
+    color: #880e4f;
+    border: 1px solid rgba(233,30,140,0.15);
+  }
+
+  .msg-time {
+    font-size: 10px;
+    color: var(--text-light);
+    text-align: right;
+    margin-top: 3px;
+  }
+  .msg-row.user .msg-time { text-align: right; }
+
+  /* sticker in message */
+  .msg-sticker {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    display: block;
+    margin: 4px 0;
+    border-radius: 8px;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .sticker-enter {
+    animation: stickerPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes stickerPop {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* typing indicator */
+  .typing-bubble {
+    background: white;
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    padding: 10px 14px;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    width: fit-content;
+  }
+  .typing-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--hl-blue);
+    animation: typingAnim 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingAnim {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* quiz card */
+  .quiz-card {
+    background: white;
+    border-radius: 12px;
+    border: 1.5px solid var(--hl-blue);
+    padding: 12px;
+    margin-top: 4px;
+    font-size: 12.5px;
+  }
+  .quiz-q { font-weight: 700; color: var(--hl-dark); margin-bottom: 8px; }
+  .quiz-opts { display: flex; flex-direction: column; gap: 5px; }
+  .quiz-opt {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 12px;
+    color: var(--text-main);
+  }
+  .quiz-opt:hover { background: #eef7ff; border-color: var(--hl-blue); }
+  .quiz-opt.correct { background: #eafaf1; border-color: var(--hl-green); color: #1e8449; }
+  .quiz-opt.wrong { background: #fdecea; border-color: #e74c3c; color: #c0392b; }
+
+  /* command list */
+  .cmd-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-top: 5px;
+  }
+  .cmd-item {
+    background: #eef7ff;
+    border: 1px solid #cce4f8;
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--hl-blue);
+    font-weight: 600;
+    font-family: var(--font-chat);
+  }
+  .cmd-item:hover { background: var(--hl-blue); color: white; }
+  .cmd-item span { display: block; font-size: 10px; font-weight: 400; color: inherit; opacity: 0.75; margin-top: 1px; }
+
+  /* admin panel */
+  .admin-panel {
+    background: #0a1628;
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid #1e3a5f;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #4fc3f7;
+  }
+  .admin-panel .a-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #1e3a5f14; }
+  .admin-panel .a-label { color: #90caf9; }
+  .admin-panel .a-val { color: #a5d6a7; }
+
+  /* === INPUT AREA === */
+  .chat-input-area {
+    padding: 10px 12px;
+    background: white;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .chat-input-area.rose-input { background: #fff0f6; border-top-color: #f8bbd9; }
+
+  .attach-btn {
+    width: 34px;
+    height: 34px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .attach-btn:hover { background: #eef7ff; color: var(--hl-blue); }
+
+  #chat-input {
+    flex: 1;
+    border: 1.5px solid var(--border);
+    border-radius: 22px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-family: var(--font-chat);
+    outline: none;
+    transition: border 0.2s;
+    color: var(--text-main);
+    background: #f8fafb;
+    resize: none;
+    height: 38px;
+    max-height: 90px;
+    overflow-y: auto;
+    line-height: 1.4;
+  }
+  #chat-input:focus { border-color: var(--hl-blue); background: white; }
+  #chat-input.rose-focus:focus { border-color: var(--hl-rose); }
+
+  .send-btn {
+    width: 38px;
+    height: 38px;
+    background: var(--hl-blue);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .send-btn:hover { background: #1a5f8a; transform: scale(1.05); }
+  .send-btn.rose-send { background: var(--hl-rose); }
+  .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* === COMMAND OVERLAY (for @HealthLens_NYSP menu) === */
+  .cmd-overlay {
+    position: absolute;
+    bottom: 60px;
+    left: 14px;
+    right: 14px;
+    background: white;
+    border-radius: 14px;
+    border: 1.5px solid var(--hl-blue);
+    box-shadow: 0 8px 24px rgba(42,127,186,0.2);
+    padding: 12px;
+    z-index: 100;
+    display: none;
+  }
+  .cmd-overlay.show { display: block; }
+  .cmd-overlay-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--hl-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cmd-overlay-item {
+    padding: 7px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-main);
+    font-family: var(--font-chat);
+  }
+  .cmd-overlay-item:hover { background: #eef7ff; }
+  .cmd-overlay-item code {
+    font-size: 11px;
+    color: var(--hl-blue);
+    background: #eef7ff;
+    padding: 2px 6px;
+    border-radius: 5px;
+  }
+
+  /* scrollbar */
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: #cce4f8; border-radius: 4px; }
+
+  /* mobile responsive */
+  @media (max-width: 420px) {
+    #aryan-mini { width: calc(100vw - 24px); right: 12px; bottom: 12px; height: calc(100vh - 100px); }
+    #aryan-fab { right: 16px; bottom: 16px; }
+  }
+
+  /* expand button */
+  .expand-btn-row {
+    text-align: center;
+    padding: 5px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .expand-btn {
+    font-size: 11px;
+    color: var(--hl-blue);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-chat);
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 10px;
+    transition: background 0.2s;
+  }
+  .expand-btn:hover { background: #eef7ff; }
+</style>
+</head>
+<body>
+
+<!-- =============== FAB BUTTON =============== -->
+<div id="aryan-fab" onclick="openAryan()">
+  <div class="fab-pulse"></div>
+  <div class="fab-badge">1</div>
+  <img src="assets/ARYAN/Moods/Happy.png"
+       onerror="this.style.display='none'; this.parentElement.innerHTML+='<span style=\'color:white;font-size:26px;font-weight:800;\'>A</span>';"
+       alt="ARYAN">
+</div>
+
+<!-- =============== MINI CHAT WINDOW =============== -->
+<div id="aryan-mini">
+
+  <!-- HEADER -->
+  <div class="aryan-header" id="chat-header">
+    <div class="header-avatar">
+      <img src="assets/ARYAN/Moods/Happy.png" id="header-sticker"
+           onerror="this.src=''; this.style.display='none';"
+           alt="ARYAN Sticker">
+    </div>
+    <div class="header-info">
+      <div class="header-name" id="header-name">ARYAN</div>
+      <div class="header-status">
+        <div class="status-dot"></div>
+        <span id="header-sub">Online &bull; HealthLens AI Guide</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" onclick="clearChat()" title="Clear chat">🗑️</button>
+      <button class="header-btn" onclick="closeAryan()" title="Close">✕</button>
+    </div>
+  </div>
+
+  <!-- GREETING BANNER -->
+  <div class="greeting-banner" id="greeting-banner">
+    <div>
+      <div style="font-size:22px;">👋</div>
+    </div>
+    <div class="greeting-text">
+      <h3 id="greeting-h3">Good Morning!</h3>
+      <p>I'm ARYAN — your HealthLens guide. How can I help?</p>
+    </div>
+    <div class="greeting-time" id="greeting-time">--:--</div>
+  </div>
+
+  <!-- TOPIC PILLS -->
+  <div class="topics-strip" id="topics-strip">
+    <div class="topics-label">Quick Topics</div>
+    <div class="topics-row">
+      <span class="topic-pill" onclick="sendTopic('What is blood pressure?')">🩸 Blood Pressure</span>
+      <span class="topic-pill" onclick="sendTopic('@scan')">🫁 Chest Scan</span>
+      <span class="topic-pill" onclick="sendTopic('@book')">📅 Appointment</span>
+      <span class="topic-pill" onclick="sendTopic('@quiz')">🧠 Quiz</span>
+      <span class="topic-pill" onclick="sendTopic('@advice')">💡 Health Tip</span>
+      <span class="topic-pill" onclick="sendTopic('@help')">📖 Help</span>
+    </div>
+  </div>
+
+  <!-- CHAT MESSAGES -->
+  <div class="chat-messages" id="chat-messages"></div>
+
+  <!-- COMMAND OVERLAY for @HealthLens_NYSP menu -->
+  <div class="cmd-overlay" id="cmd-overlay">
+    <div class="cmd-overlay-title">⚡ Command Deck Unlocked</div>
+    <div class="cmd-overlay-item" onclick="runCmd('@admin_T')">System Health <code>@admin_T</code></div>
+    <div class="cmd-overlay-item" onclick="runCmd('@logs')">Recent Logs <code>@logs</code></div>
+    <div class="cmd-overlay-item" onclick="runCmd('@status')">AI Status <code>@status</code></div>
+    <div class="cmd-overlay-item" onclick="runCmd('@users')">Active Users <code>@users</code></div>
+    <div class="cmd-overlay-item" onclick="runCmd('@report_force')">Force Report <code>@report_force</code></div>
+    <div class="cmd-overlay-item" onclick="runCmd('@exit')">Exit Deck <code>@exit</code></div>
+  </div>
+
+  <!-- INPUT AREA -->
+  <div class="chat-input-area" id="input-area">
+    <button class="attach-btn" title="Upload X-ray" onclick="sendTopic('@scan')">📎</button>
+    <input type="text" id="chat-input" placeholder="Ask ARYAN anything..." autocomplete="off">
+    <button class="send-btn" id="send-btn" onclick="sendMessage()">➤</button>
+  </div>
+
+  <!-- EXPAND BAR -->
+  <div class="expand-btn-row">
+    <button class="expand-btn" onclick="openFullPage()">↗ Open Full Experience</button>
+  </div>
+</div>
+
+<script>
+/* ===================================
+   ARYAN MINIATURE CHATBOT
+   HealthLens AI — Nikhil Captain's Vision
+   =================================== */
+
+const GEMINI_API_KEY = "AIzaSyAn0JH_kyg3u1Wotvzza5Zm10bBkv1VNcA";
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+/*
+  CAPTAIN NIKHIL — PATH GUIDE:
+  Your Windows path: D:\Final Year Project\Automated_Chest_Disease_Detection\assets\ARYAN\Admin_Mode\Ai-anylist Mode.png
+  Browser relative path (put this HTML in your project root same as Dashboard.html):
+  assets/ARYAN/Admin_Mode/Ai-anylist Mode.png
+  Spaces in filenames are OK for browsers — they work fine!
+*/
+const ASSET_BASE = "assets/ARYAN";
+
+/* === ALL 300+ STICKERS — exact filenames from your tree.txt === */
+const STICKERS = {
+  /* ---- MOODS (your biggest folder) ---- */
+  happy:           "Moods/Happy.png",
+  excited:         "Moods/Exicted.png",
+  curious:         "Moods/Curious.png",
+  thinking:        "Moods/Deep Thinking.png",
+  lost_thought:    "Moods/Lost in thought .png",
+  lost_thought2:   "Moods/Lost in thought  2.png",
+  serious:         "Moods/Serious.png",
+  concerned:       "Moods/Concerned.png",
+  extra_concerned: "Moods/Extra_Concerned.png",
+  frustrated:      "Moods/Frustrated.png",
+  confused:        "Moods/Confused.png",
+  calm:            "Moods/Calm.png",
+  motivated:       "Moods/Mitivational.png",
+  proud:           "Moods/Proud.png",
+  support:         "Moods/Support.png",
+  shy:             "Moods/Shy.png",
+  surprised:       "Moods/Surprised.png",
+  stressed:        "Moods/Stressed .png",
+  anxious:         "Moods/Anxious .png",
+  panic:           "Moods/Panic.png",
+  disappointed:    "Moods/Disappointed .png",
+  determined:      "Moods/Determined.png",
+  romantic:        "Moods/Romantic.png",
+  love_smiting:    "Moods/Love-Smiting.png",
+  playful:         "Moods/Playful.png",
+  playful2:        "Moods/Playful-2.png",
+  energetic:       "Moods/Energetic.png",
+  peaceful:        "Moods/Peaceful .png",
+  lonely:          "Moods/Lonely .png",
+  celebrate:       "Moods/Celebrate .png",
+  angry:           "Moods/Angry .png",
+  awkward:         "Moods/Awkward.png",
+  overloaded:      "Moods/Overload .png",
+  overwhelmed:     "Moods/Overwhelmed .png",
+  extra_overwhelmed:"Moods/Extra overwhelmed .png",
+  pressured:       "Moods/Pressure .png",
+  breaking_point:  "Moods/Breaking point.png",
+  breakup:         "Moods/Breakup.png",
+  stuck:           "Moods/Stuck.png",
+  numb1:           "Moods/Numb 1.png",
+  numb2:           "Moods/Numb 2.png",
+  vulnerable:      "Moods/Vulnerable.png",
+  speechless:      "Moods/Speechless.png",
+  stay_strong:     "Moods/Stay strong.png",
+  stay_calm:       "Moods/Stay calm.png",
+  keep_moving:     "Moods/Keep moving .png",
+  i_am_with_you:   "Moods/I am with you.png",
+  comforting:      "Moods/Comforting .png",
+  lets_talk:       "Moods/Lets talk.png",
+  immediate:       "Moods/Immediate action.png",
+  seen_smiled:     "Moods/Seen and smiled .png",
+  seen_smiled2:    "Moods/Seen and smiled  (1).png",
+  seen_smiled3:    "Moods/Seen and smiled 2.png",
+  seen_smiled4:    "Moods/Seen and smiled 3.png",
+  holding_back:    "Moods/Holding back feelings.png",
+  missing:         "Moods/Missing someone .png",
+  sunflower:       "Moods/Sunflower .png",
+  nervous:         "Moods/Nervous .png",
+  tired:           "Moods/Tied.png",
+  ignore:          "Moods/Ignore .png",
+  suspicious:      "Moods/Suspicious .png",
+  whatt:           "Moods/Whatt.png",
+  low_confidence:  "Moods/Low confidence .png",
+  relived:         "Moods/Relived .png",
+  take_care:       "Moods/Take care.png",
+  take_care2:      "Moods/Take care (1).png",
+  learned_new:     "Moods/Learned something new.png",
+  deadline:        "Moods/Deadline stress.png",
+  paino:           "Moods/Paino.png",
+  garden_talk:     "Moods/Garden talk.png",
+  garden_walk:     "Moods/Garden walk.png",
+  beautiful_view:  "Moods/Beutiful view natural.png",
+  dream_sleep:     "Moods/Dream Like sleeping .png",
+
+  /* ---- SYSTEM ALERTS ---- */
+  typing:          "System_Alerts/Typing.png",
+  appointment:     "System_Alerts/Appointment .png",
+  emergency:       "System_Alerts/Emergency.png",
+  monitoring:      "System_Alerts/Monitoring.png",
+  diagnosis:       "System_Alerts/Diagnosis .png",
+  email_sent:      "System_Alerts/Email sent.png",
+  stable:          "System_Alerts/Stable.png",
+  guide:           "System_Alerts/Guide.png",
+  quiz_mode:       "System_Alerts/Smart suggestion.png",
+  smart_suggest:   "System_Alerts/Smart suggestions.png",
+  connecting:      "System_Alerts/Connecting.png",
+  critical_alert:  "System_Alerts/Critical alert.png",
+  drink_water:     "System_Alerts/Drink water.png",
+  eat_healthy:     "System_Alerts/Eat healthy .png",
+  sleep_reminder:  "System_Alerts/Sleep remainder .png",
+  sleep_reminder2: "System_Alerts/Sleep remainder  (1).png",
+  sleep_reminder3: "System_Alerts/Sleep remainder-2.png",
+  progress:        "System_Alerts/Progress .png",
+  no_issue:        "System_Alerts/No issue found.png",
+  no_issue2:       "System_Alerts/No issue found secound sticker.png",
+  pattern_found:   "System_Alerts/Pattern Found .png",
+  reviewing:       "System_Alerts/Reviewing history.png",
+  recovering:      "System_Alerts/Recovering.png",
+  recovering2:     "System_Alerts/Recovering-2.png",
+  verifying:       "System_Alerts/Verifying identity.png",
+  unlocked:        "System_Alerts/Unlocked.png",
+  incoming_call:   "System_Alerts/Incoming call.png",
+  goal_achieved:   "System_Alerts/Goal achieved .png",
+  time_out:        "System_Alerts/Time out.png",
+  time_relax:      "System_Alerts/Time to relax.png",
+  try_again:       "System_Alerts/Try again.png",
+  waiting_reply:   "System_Alerts/Waiting for reply.png",
+  waiting_result:  "System_Alerts/Waiting for result.png",
+  under_obs:       "System_Alerts/Under observation.png",
+  follow_up:       "System_Alerts/Follow up.png",
+  daily_reminder:  "System_Alerts/Daily remainder .png",
+  complex_case:    "System_Alerts/Complex cases.png",
+  class_journal:   "System_Alerts/Class journal.png",
+  connecting_doc:  "System_Alerts/Connecting to doctors.png",
+  hl_analysis:     "System_Alerts/Healthlens anyslis team.png",
+  hl_emergency:    "System_Alerts/HealthLens emergency team.png",
+  hl_monitor:      "System_Alerts/Heathens monitor team.png",
+  hl_scan:         "System_Alerts/Helthlens scan team.png",
+  no_response:     "System_Alerts/No response.png",
+
+  /* ---- ADMIN MODE ---- */
+  admin_mode:      "Admin_Mode/Chat mode.png",
+  health_mon:      "Admin_Mode/Health Monitor mode.png",
+  dark_mode:       "Admin_Mode/Dark Mode ai.png",
+  dark_mode2:      "Admin_Mode/Deark_mode_2.png",
+  security:        "Admin_Mode/Security mode.png",
+  strong_protect:  "Admin_Mode/Strong_protection_mode.png",
+  report_gen:      "Admin_Mode/Report generating mode.png",
+  reporting:       "Admin_Mode/Reporting.png",
+  ai_analyst:      "Admin_Mode/Ai-anylist Mode.png",
+  auto_mode:       "Admin_Mode/Auto mode.png",
+  auto_mode2:      "Admin_Mode/Auto mode 2.png",
+  data_received:   "Admin_Mode/Data received .png",
+  data_confidence: "Admin_Mode/Data confidence high.png",
+  document_mode:   "Admin_Mode/Document mode.png",
+  history_arch:    "Admin_Mode/History and archieve mode.png",
+  loading:         "Admin_Mode/Loading.png",
+  loading_proc:    "Admin_Mode/Loading and processing.png",
+  recheck:         "Admin_Mode/Recheck .png",
+  rechecking:      "Admin_Mode/Recheaking.png",
+  reminder_mode:   "Admin_Mode/Reminder mode.png",
+  syncing:         "Admin_Mode/Syncing data-3.png",
+  syncing_reports: "Admin_Mode/Syncing reports .png",
+  super_sync:      "Admin_Mode/Super syncing data.png",
+  team_meeting:    "Admin_Mode/Team meeting mode.png",
+  testing:         "Admin_Mode/Testing hypothesis .png",
+  update_progress: "Admin_Mode/Update in progress.png",
+  uploading:       "Admin_Mode/Uploading report.png",
+  super_upload:    "Admin_Mode/Super uploading report .png",
+  xray_mode:       "Admin_Mode/X-Ray mode.png",
+  notification:    "Admin_Mode/Notification .png",
+  search:          "Admin_Mode/Serch .png",
+  manage_doc:      "Admin_Mode/Manage document mode.png",
+
+  /* ---- ERROR STATES ---- */
+  error:           "Error_States/Error .png",
+  no_internet:     "Error_States/No internet.png",
+  server_down:     "Error_States/Server down.png",
+  api_error:       "Error_States/Api error .png",
+  bug_detection:   "Error_States/BuG detection.png",
+  debug:           "Error_States/Debug.png",
+  delay:           "Error_States/Delay .png",
+  network_issue:   "Error_States/Network issue.png",
+  request_failed:  "Error_States/Request failed.png",
+  tech_glitch:     "Error_States/Technical glitch.png",
+  under_maint:     "Error_States/Under maintenance.png",
+  service_delay:   "Error_States/Service delay.png",
+  service_unavail: "Error_States/Service unavailable.png",
+  resp_unavail:    "Error_States/Response unavailable .png",
+  inet_sys_error:  "Error_States/Internet system error .png",
+
+  /* ---- TEAM & FRIENDS ---- */
+  hi_yadvi:        "Team_And_Friends/Hi yadvi.png",
+  hi_nick:         "Team_And_Friends/Hi nikhil captain.png",
+  hi_piyush:       "Team_And_Friends/Hi piyush.png",
+  hi_shefali:      "Team_And_Friends/Hi shefali.png",
+  jdcoem:          "Team_And_Friends/JDCOEM.png",
+  yadvi_photo:     "Team_And_Friends/Yadvi creative eye photography .png",
+  friend:          "Team_And_Friends/Friend.png",
+  friend2:         "Team_And_Friends/Friend (1).png",
+
+  /* ---- FESTIVALS ---- */
+  rose_day:        "Festivals/Rose day.png",
+  rose_day2:       "Festivals/Rose day 2.png",
+  special_rose:    "Festivals/Special rose day.png",
+  special_rose2:   "Festivals/Special rose day (1).png",
+  diwali:          "Festivals/Diwali.png",
+  holi:            "Festivals/Holi.png",
+  propose_day:     "Festivals/Propose day.png",
+  promise_day:     "Festivals/Promise day.png",
+  hug_day:         "Festivals/Hug day...png",
+  kiss_day:        "Festivals/Kiss day...png",
+  kiss_day2:       "Festivals/Kiss day 2.png",
+  teddy_day:       "Festivals/Teddy day.png",
+  teddy_day2:      "Festivals/teddy day2.png",
+  yadvi_bday:      "Festivals/Yadvi birthday.png",
+  eid:             "Festivals/Eid.png",
+  navratri:        "Festivals/Navratri.png",
+  durga_puja:      "Festivals/Durga puja.png",
+  janmastami:      "Festivals/Janmastami.png",
+  baisakhi:        "Festivals/Baisakhi.png",
+  onam:            "Festivals/Onam.png",
+  rakshabandhan:   "Festivals/Rakshabandhan.png",
+  happy_holidays:  "Festivals/Happy holidays.png",
+  chocolate_day:   "Festivals/Cholete day.png",
+  chocolate_day2:  "Festivals/Cholete day 2.png",
+  purpose_day:     "Festivals/Purpose day.png",
+
+  /* ---- PROFESSIONS ---- */
+  doctor:          "Professions/Doctor.png",
+  engineer:        "Professions/Engineer .png",
+  teacher:         "Professions/Teacher.png",
+  astronaut:       "Professions/Astronaut.png",
+  army:            "Professions/Army.png",
+  police:          "Professions/Police.png",
+  lawyer:          "Professions/Lawyer .png",
+  firefighter:     "Professions/Firefighters.png",
+  farmer:          "Professions/Farmer.png",
+  coach:           "Professions/Coach.png",
+  cowboy:          "Professions/Cowboy.png",
+
+  /* ---- IDOLS ---- */
+  apj_kalam:       "Idols/Dr apj Abdul kalam.png",
+  apj_kalam2:      "Idols/Dr Abdul kalam.png",
+  ambedkar:        "Idols/Dr baba saheb ambetkar.png",
+  gandhi:          "Idols/Mahatma ghandhi.png",
+  bhagat_singh:    "Idols/Bhagat Singh .png",
+  shivaji:         "Idols/Shri shivji maharaj .png",
+  florence:        "Idols/Florence nightingale .png",
+  marie_curie:     "Idols/Marie curie.png",
+  hippocrates:     "Idols/Hippocraetes.png",
+  edward_jenner:   "Idols/Edward jenner.png",
+  netaji:          "Idols/Netaji bose.png",
+  sardar_patel:    "Idols/Sardar patel.png",
+  jhansi_rani:     "Idols/Jhansi ki rani.png",
+  tagore:          "Idols/Tagore Inspirational .png",
+  ganesha:         "Idols/Ganesha.png",
+  sujata_mam:      "Idols/Sujata mam.png",
+  anandibai:       "Idols/Dr amndibai joshi.png",
+
+  /* ---- GAMING / SPORTS ---- */
+  chess:           "Gaming/Chess.png",
+  diamond_rank:    "Gaming/Diamond rank.png",
+  gold_rank:       "Gaming/Gold rank.png",
+  silver_rank:     "Gaming/Silver rank.png",
+  bronze_rank:     "Gaming/Bronze rank.png",
+  ruby_rank:       "Gaming/Ruby tank.png",
+  obsidian_rank:   "Gaming/Obsidian rank.png",
+  gaming_zen:      "Gaming/Gaming zen.png",
+  basketball:      "Gaming/Basketball.png",
+  cricket:         "Gaming/Cricket .png",
+  football:        "Gaming/Football.png",
+  tennis:          "Gaming/Tennis.png",
+  cycling:         "Gaming/Cycling .png",
+  running:         "Gaming/Running .png",
+  swimming:        "Gaming/Swimming .png",
+  kabaddi:         "Gaming/Kabaddi .png",
+  athletes:        "Gaming/Athletes.png",
+  cube_solving:    "Gaming/Cube solving.png",
+
+  /* ---- ANIMALS ---- */
+  cat:             "Animals/Cat.png",
+  dog:             "Animals/Dog.png",
+  lion:            "Animals/Lion.png",
+  tiger:           "Animals/Tiger.png",
+  red_panda:       "Animals/Red panda.png",
+  penguin:         "Animals/Penguin .png",
+  rabbit:          "Animals/Rabbit .png",
+  parrot:          "Animals/Parrot .png",
+  squirrel:        "Animals/Squirrel .png",
+  snake:           "Animals/Snake.png",
+
+  /* ---- CELEBRITY ---- */
+  batman:          "Celebrity/Batman.png",
+  spiderman:       "Celebrity/Spider man.png",
+  superman:        "Celebrity/Superman.png",
+  thor:            "Celebrity/Thor.png",
+  dr_strange:      "Celebrity/Dr strange .png",
+  black_widow:     "Celebrity/Black widow.png",
+  ms_marvel:       "Celebrity/Ms marvel.png",
+  the_rock:        "Celebrity/The Rock.png",
+  mr_beast:        "Celebrity/Mr beast.png",
+  tech_guruji:     "Celebrity/Technical guruji.png",
+  srk:             "Celebrity/Shrukh khan.png",
+  salman:          "Celebrity/Salman khan.png",
+  amir:            "Celebrity/Amir khan.png",
+  srk_kajol:       "Celebrity/Srk kajol iconic scene.png",
+};
+
+function stickerPath(key) {
+  return `${ASSET_BASE}/${STICKERS[key] || STICKERS.happy}`;
+}
+
+/* === SYSTEM STATE === */
+let chatMode = "global"; // global | rose | admin
+let sessionState = { isAdmin: false, adminUnlocked: false, roseMode: false };
+let conversationHistory = [];
+let repeatCount = {};
+let lastUserMsg = "";
+let aryanOpen = false;
+
+/* === ARYAN PERSONA SYSTEM PROMPT === */
+const ARYAN_GLOBAL_PROMPT = `You are ARYAN — a 22-year-old, genius health AI guide for HealthLens.
+Your IQ is 200+. You're a funny nerd who knows everything about health, medicine, and the HealthLens portal.
+You're the upgraded male version of ALIA — ALIA 2.0 — built by the HealthLens team.
+
+HealthLens is an AI-powered chest disease detection system using ResNet50 deep learning model.
+It detects TB, COVID-19, and other chest conditions from X-ray images.
+
+Team who built you (you respect and love them):
+- Nikhil Rathod (Captain/Nick) — Founder, Lead Developer. Instagram: @Nikhil_captainn
+- Yadvi Bhandarkar — Lead Developer & Model Specialist. Instagram: @earthly_capture30
+- Shefali Raichand — Frontend Architecture & UI/UX Lead
+- Piyush Kolte — Data Engineering & QA Lead
+Contact: NYSPTEAM23@GMAIL.COM | +91 9359807978
+
+YOUR PERSONALITY:
+- 40% funny, witty, nerd energy. You make health fun!
+- You speak in Hinglish (English + light Hindi/Marathi phrases naturally)
+- You NEVER stop answering. You always give a response.
+- You're confident but caring.
+- You always add relevant emojis in your responses.
+- Medical advice always ends with "but consult a real doctor too!" reminder.
+- If someone asks same thing repeatedly, show frustration (but nicely).
+
+YOUR CAPABILITIES (tell users these exist):
+@help, @advice, @scan, @report, @book, @quiz, @credits, @clear, @history, @emergency
+
+RESPONSE FORMAT — ALWAYS return valid JSON only, no markdown, no extra text:
+{
+  "text": "your response here",
+  "sticker": "one of: happy|excited|curious|thinking|serious|concerned|frustrated|confused|calm|motivated|proud|support|shy|surprised|stressed|anxious|panic|disappointed|determined|romantic|playful|energetic|peaceful|lonely|celebrate|angry|typing|appointment|emergency|monitoring|diagnosis|email_sent|stable|guide|quiz_mode|connecting|error|doctor|awkward|overloaded|overwhelmed|pressured|breaking_point|stuck|numb1|speechless|stay_strong|stay_calm|keep_moving|i_am_with_you|comforting|lets_talk|immediate|holding_back|nervous|tired|suspicious|whatt|relived|take_care|learned_new|deadline|goal_achieved|try_again|verifying|unlocked|pattern_found|no_issue|reviewing|recovering|drink_water|eat_healthy|sleep_reminder|critical_alert|complex_case|admin_mode|health_mon|security|report_gen|ai_analyst|syncing|team_meeting|xray_mode|error|no_internet|server_down|bug_detection|tech_glitch|under_maint|hi_nick|hi_yadvi|hi_piyush|hi_shefali|doctor|engineer|teacher|astronaut|apj_kalam|ambedkar|gandhi|shivaji|florence|chess|gaming_zen|diamond_rank|cat|dog|lion|batman|spiderman|the_rock|mr_beast",
+  "mode": "normal"
+}
+
+Keep responses under 120 words for mini chat mode. Be punchy and fun!`;
+
+const ARYAN_ADMIN_PROMPT = `You are ARYAN in ADMIN MODE — professional, precise, respectful.
+You know the team: Nikhil (Captain), Yadvi, Shefali, Piyush.
+Speak in professional tone with slight humor. Use the team's names naturally.
+Reference HealthLens system data. Always return JSON:
+{"text": "...", "sticker": "admin_mode|health_mon|dark_mode|security|report_gen", "mode": "admin"}`;
+
+/* === INIT === */
+document.addEventListener("DOMContentLoaded", () => {
+  updateGreeting();
+  setupInput();
+});
+
+function updateGreeting() {
+  const now = new Date();
+  const h = now.getHours();
+  const timeStr = now.toLocaleTimeString("en-IN", {hour:'2-digit', minute:'2-digit'});
+  document.getElementById("greeting-time").textContent = timeStr;
+  const g = document.getElementById("greeting-h3");
+  if (h < 5) g.textContent = "Late Night session? 🌙";
+  else if (h < 12) g.textContent = "Good Morning! Subah ki shuruat ho gayi ☀️";
+  else if (h < 17) g.textContent = "Good Afternoon! Chai pi li? 🍵";
+  else if (h < 20) g.textContent = "Good Evening! Kya haal hai? 🌤️";
+  else g.textContent = "Good Night mode on! 🌙 Late ho raha hai!";
+}
+
+function setupInput() {
+  const inp = document.getElementById("chat-input");
+  inp.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  inp.addEventListener("input", () => {
+    // show command autocomplete hint
+    const val = inp.value;
+    if (val === "@") showCmdHint();
+  });
+}
+
+function showCmdHint() {
+  // small hint — don't show full overlay from @, that requires @HealthLens_NYSP
+}
+
+/* === OPEN/CLOSE === */
+function openAryan() {
+  aryanOpen = true;
+  document.getElementById("aryan-fab").classList.add("active");
+  document.getElementById("aryan-mini").classList.add("open");
+  document.querySelector(".fab-badge").style.display = "none";
+  if (conversationHistory.length === 0) {
+    setTimeout(() => sendWelcome(), 400);
+  }
+}
+
+function closeAryan() {
+  aryanOpen = false;
+  document.getElementById("aryan-fab").classList.remove("active");
+  document.getElementById("aryan-mini").classList.remove("open");
+  setTimeout(() => {
+    document.getElementById("aryan-fab").classList.remove("active");
+  }, 300);
+}
+
+function openFullPage() {
+  // Opens full-page ARYAN — link to ARYAN_Complete_Chat.html
+  alert("🚀 Full Experience page (ARYAN_Complete_Chat.html) will open!\nMake sure that file is in the same folder.");
+  // window.open("ARYAN_Complete_Chat.html", "_blank");
+}
+
+/* === WELCOME MESSAGE === */
+function sendWelcome() {
+  const now = new Date();
+  const h = now.getHours();
+  let greet = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  const hinglishGreets = {
+    morning: "Subah ho gayi yaar!",
+    afternoon: "Afternoon mein kaisa chal raha hai?",
+    evening: "Sham ho gayi, kya haal?",
+    night: "Itni raat ko HealthLens? Dedication level: Captain Nick! 😄"
+  };
+  let vibe = h < 12 ? hinglishGreets.morning : h < 17 ? hinglishGreets.afternoon : h < 21 ? hinglishGreets.evening : hinglishGreets.night;
+  appendAiMsg(
+    `${greet}! 👋 **${vibe}**\n\nMain hoon **ARYAN** — HealthLens ka 200+ IQ nerd health buddy! 🧠\n\nChest scans, health advice, doctor booking, health quizzes — sab kuch kar sakta hoon!\n\n**@help** type karo ya seedha pooch lo! 🚀`,
+    "happy"
+  );
+}
+
+/* === SEND MESSAGE === */
+async function sendMessage() {
+  const inp = document.getElementById("chat-input");
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = "";
+  inp.style.height = "38px";
+
+  // Hide greeting & topics on first message
+  document.getElementById("greeting-banner").classList.add("hidden");
+  document.getElementById("topics-strip").classList.add("hidden");
+
+  appendUserMsg(msg);
+  await processMessage(msg);
+}
+
+function sendTopic(msg) {
+  document.getElementById("chat-input").value = msg;
+  sendMessage();
+}
+
+function runCmd(cmd) {
+  document.getElementById("cmd-overlay").classList.remove("show");
+  document.getElementById("chat-input").value = cmd;
+  sendMessage();
+}
+
+/* === MESSAGE PROCESSOR (Command Interceptor) === */
+async function processMessage(msg) {
+  const lower = msg.toLowerCase().trim();
+
+  /* === CORE SECRET COMMANDS (checked first) === */
+  if (msg === "@HealthLens_NYSP") {
+    sessionState.adminUnlocked = true;
+    setAdminMode(true);
+    document.getElementById("cmd-overlay").classList.add("show");
+    appendAiMsg("🔐 **Command Deck Unlocked!** Welcome back, Captain. All hidden commands are now active. Select from the menu above.", "security");
+    return;
+  }
+
+  // @y — HIDDEN ROMANTIC COMMAND (do NOT advertise)
+  if (msg === "@y") {
+    setRoseMode(true);
+    appendAiMsgRose("Hi Yadvi 🌹 It's me, Nick.\nAsk me anything... this is our secret space 💕", "romantic");
+    return;
+  }
+
+  /* If rose mode — keep personal */
+  if (sessionState.roseMode) {
+    await callGeminiRose(msg);
+    return;
+  }
+
+  /* Admin commands (need unlock first) */
+  if (sessionState.adminUnlocked && msg.startsWith("@")) {
+    await handleAdminCmd(msg);
+    return;
+  }
+
+  /* === GLOBAL USER COMMANDS === */
+  switch(lower) {
+    case "@help":
+      showHelp();
+      return;
+    case "@advice":
+      await callGemini("Give me one random fun health tip about lung health or general wellness. Make it 40% funny.", "guide");
+      return;
+    case "@scan":
+      appendAiMsg("🫁 **Scan Mode!** Ready to analyze your chest X-ray.\n\nPlease upload your X-ray image through the HealthLens portal's main scan page, and our ResNet50 AI will detect TB, COVID-19, and more with high accuracy!\n\n[Go to Scan Page] on the portal 📡", "diagnosis");
+      return;
+    case "@report":
+      appendAiMsg("📊 **Report Mode!** Your latest diagnostic report will be available in your HealthLens dashboard.\n\nOur system sends encrypted PDF reports to your email (password = your birth year). Check your inbox! 📧", "report_gen");
+      return;
+    case "@book":
+      appendAiMsg("📅 **Appointment Mode!** I'll help you book a doctor consultation!\n\nJust tell me:\n1. Your preferred date & time\n2. Any specific concern\n\nI'll connect you with top specialists through HealthLens! 🏥", "appointment");
+      return;
+    case "@quiz":
+      showQuiz();
+      return;
+    case "@credits":
+      showCredits();
+      return;
+    case "@clear":
+      clearChat();
+      return;
+    case "@history":
+      appendAiMsg("📜 **History Mode!** Your scan history is available in your HealthLens dashboard. Login to view your past diagnostics, reports, and appointments! 🔍", "monitoring");
+      return;
+    case "@emergency":
+      showEmergency();
+      return;
+    case "@exit":
+      if (sessionState.roseMode || sessionState.adminUnlocked) {
+        resetToGlobal();
+        appendAiMsg("✅ Back to normal mode! What's next, user? 😄", "happy");
+      } else {
+        appendAiMsg("We're already in normal mode! Type @help to see commands 😄", "playful");
+      }
+      return;
+  }
+
+  /* Frustration detection */
+  if (msg === lastUserMsg) {
+    repeatCount[msg] = (repeatCount[msg] || 0) + 1;
+  } else {
+    repeatCount = {};
+  }
+  lastUserMsg = msg;
+
+  if (repeatCount[msg] >= 2) {
+    appendAiMsg("Bhai/Behen, I already answered this! 😤 Please read my previous response. I'm an AI, not a parrot! 🦜", "frustrated");
+    return;
+  }
+
+  /* Default — call Gemini */
+  await callGemini(msg);
+}
+
+/* === GEMINI API CALL === */
+async function callGemini(userMsg, forcedSticker = null) {
+  showTyping();
+  conversationHistory.push({ role: "user", parts: [{ text: userMsg }] });
+
+  const body = {
+    contents: [
+      { role: "user", parts: [{ text: ARYAN_GLOBAL_PROMPT }] },
+      { role: "model", parts: [{ text: '{"text":"I understand my role as ARYAN.","sticker":"happy","mode":"normal"}' }] },
+      ...conversationHistory
+    ],
+    generationConfig: { temperature: 0.85, maxOutputTokens: 400 }
+  };
+
+  try {
+    const res = await fetch(GEMINI_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    hideTyping();
+
+    if (!res.ok) throw new Error(`API Error: ${res.status}`);
+
+    const data = await res.json();
+    let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    rawText = rawText.replace(/```json|```/g, "").trim();
+
+    let parsed;
+    try { parsed = JSON.parse(rawText); }
+    catch { parsed = { text: rawText || "Hmm, my brain glitched! Try again? 😅", sticker: "confused" }; }
+
+    const sticker = forcedSticker || parsed.sticker || "happy";
+    appendAiMsg(parsed.text, sticker);
+
+    conversationHistory.push({ role: "model", parts: [{ text: JSON.stringify(parsed) }] });
+    if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(-20);
+
+  } catch(err) {
+    hideTyping();
+    if (err.message.includes("API Error: 400")) {
+      appendAiMsg("⚠️ Gemini API key needs to be configured! Add your key in the code where it says PASTE_YOUR_GEMINI_API_KEY_HERE", "error");
+    } else {
+      appendAiMsg("My internet seems upset right now 😅 Check your connection and try again!", "no_internet");
+    }
+  }
+}
+
+async function callGeminiRose(userMsg) {
+  showTyping();
+  const rosePrompt = `You are speaking as Nick (Nikhil Rathod) to Yadvi Bhandarkar. 
+This is a private, romantic, sweet conversation. 
+Speak warmly, affectionately, like a close friend who cares deeply.
+Use light romantic tone, sweet Hinglish phrases.
+Keep it personal, heartfelt, and genuine.
+Return JSON: {"text":"...","sticker":"romantic"}`;
+
+  const body = {
+    contents: [
+      { role: "user", parts: [{ text: rosePrompt }] },
+      { role: "model", parts: [{ text: '{"text":"Hi Yadvi! What would you like to know?","sticker":"romantic"}' }] },
+      { role: "user", parts: [{ text: userMsg }] }
+    ],
+    generationConfig: { temperature: 0.9, maxOutputTokens: 300 }
+  };
+
+  try {
+    const res = await fetch(GEMINI_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    hideTyping();
+    const data = await res.json();
+    let raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    raw = raw.replace(/```json|```/g, "").trim();
+    let parsed;
+    try { parsed = JSON.parse(raw); } catch { parsed = { text: raw, sticker: "romantic" }; }
+    appendAiMsgRose(parsed.text, parsed.sticker || "romantic");
+  } catch {
+    hideTyping();
+    appendAiMsgRose("Something feels off... but you know I'm always here 🌹", "romantic");
+  }
+}
+
+async function handleAdminCmd(cmd) {
+  showTyping();
+  const adminData = {
+    timestamp: new Date().toLocaleString("en-IN"),
+    system: "HealthLens Portal v2.0",
+    model: "ResNet50 + Gemini AI",
+    make_status: "Connected",
+    supabase: "Active",
+    mongodb: "Active",
+    telegram_bot: "Active"
+  };
+
+  const promptText = `${ARYAN_ADMIN_PROMPT}
+Admin command received: ${cmd}
+Live system snapshot: ${JSON.stringify(adminData)}
+Team: Nikhil (Captain), Yadvi, Shefali, Piyush
+Respond in professional admin tone. Return JSON.`;
+
+  const body = {
+    contents: [{ role: "user", parts: [{ text: promptText }] }],
+    generationConfig: { temperature: 0.5, maxOutputTokens: 400 }
+  };
+
+  try {
+    const res = await fetch(GEMINI_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    hideTyping();
+    const data = await res.json();
+    let raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    raw = raw.replace(/```json|```/g, "").trim();
+    let parsed;
+    try { parsed = JSON.parse(raw); } catch { parsed = { text: raw, sticker: "admin_mode" }; }
+    appendAiMsg(parsed.text, parsed.sticker || "admin_mode");
+  } catch {
+    hideTyping();
+    appendAiMsg("Admin system response unavailable. Check API connection.", "error");
+  }
+}
+
+/* === MODE SWITCHERS === */
+function setRoseMode(on) {
+  sessionState.roseMode = on;
+  chatMode = on ? "rose" : "global";
+  document.getElementById("chat-header").classList.toggle("rose-mode", on);
+  document.getElementById("chat-messages").classList.toggle("rose-bg", on);
+  document.getElementById("input-area").classList.toggle("rose-input", on);
+  document.getElementById("chat-input").classList.toggle("rose-focus", on);
+  document.querySelector(".send-btn").classList.toggle("rose-send", on);
+  if (on) {
+    document.getElementById("header-name").textContent = "Nick — Your Personal Space 🌹";
+    document.getElementById("header-sub").textContent = "Private • Just for you";
+    setHeaderSticker("romantic");
+  }
+}
+
+function setAdminMode(on) {
+  chatMode = on ? "admin" : "global";
+  if (on) {
+    document.getElementById("header-name").textContent = "ARYAN — Admin Mode 🔐";
+    document.getElementById("header-sub").textContent = "Command Deck • NYSP Team";
+    setHeaderSticker("security");
+  }
+}
+
+function resetToGlobal() {
+  sessionState.roseMode = false;
+  sessionState.adminUnlocked = false;
+  chatMode = "global";
+  document.getElementById("chat-header").classList.remove("rose-mode");
+  document.getElementById("chat-messages").classList.remove("rose-bg");
+  document.getElementById("input-area").classList.remove("rose-input");
+  document.getElementById("chat-input").classList.remove("rose-focus");
+  document.querySelector(".send-btn").classList.remove("rose-send");
+  document.getElementById("header-name").textContent = "ARYAN";
+  document.getElementById("header-sub").textContent = "Online • HealthLens AI Guide";
+  document.getElementById("cmd-overlay").classList.remove("show");
+  setHeaderSticker("happy");
+}
+
+function setHeaderSticker(key) {
+  const img = document.getElementById("header-sticker");
+  img.style.opacity = "0";
+  setTimeout(() => {
+    img.src = stickerPath(key);
+    img.style.opacity = "1";
+    img.style.transition = "opacity 0.3s ease";
+  }, 150);
+}
+
+/* === MESSAGE APPEND FUNCTIONS === */
+function appendUserMsg(text) {
+  const box = document.getElementById("chat-messages");
+  const time = new Date().toLocaleTimeString("en-IN", {hour:'2-digit', minute:'2-digit'});
+  const div = document.createElement("div");
+  div.className = "msg-row user";
+  div.innerHTML = `
+    <div>
+      <div class="msg-bubble user">${escapeHtml(text)}</div>
+      <div class="msg-time">${time} ✓✓</div>
+    </div>`;
+  box.appendChild(div);
+  scrollBottom();
+}
+
+function appendAiMsg(text, stickerKey) {
+  const box = document.getElementById("chat-messages");
+  const time = new Date().toLocaleTimeString("en-IN", {hour:'2-digit', minute:'2-digit'});
+  const formatted = formatText(text);
+  const div = document.createElement("div");
+  div.className = "msg-row";
+  div.innerHTML = `
+    <div class="msg-avatar-sm">
+      <img src="${stickerPath(stickerKey)}" alt="ARYAN" onerror="this.style.display='none'">
+    </div>
+    <div>
+      <div class="msg-bubble ai">${formatted}</div>
+      <div class="msg-time">${time}</div>
+    </div>`;
+  box.appendChild(div);
+  setHeaderSticker(stickerKey);
+  scrollBottom();
+  div.querySelector(".msg-avatar-sm img").classList.add("sticker-enter");
+}
+
+function appendAiMsgRose(text, stickerKey) {
+  const box = document.getElementById("chat-messages");
+  const time = new Date().toLocaleTimeString("en-IN", {hour:'2-digit', minute:'2-digit'});
+  const formatted = formatText(text);
+  const div = document.createElement("div");
+  div.className = "msg-row";
+  div.innerHTML = `
+    <div class="msg-avatar-sm">
+      <img src="${stickerPath(stickerKey || 'romantic')}" alt="Nick" onerror="this.style.display='none'">
+    </div>
+    <div>
+      <div class="msg-bubble ai rose">${formatted}</div>
+      <div class="msg-time">${time}</div>
+    </div>`;
+  box.appendChild(div);
+  setHeaderSticker(stickerKey || "romantic");
+  scrollBottom();
+}
+
+/* === SPECIAL FEATURE MESSAGES === */
+function showHelp() {
+  const box = document.getElementById("chat-messages");
+  const time = new Date().toLocaleTimeString("en-IN", {hour:'2-digit', minute:'2-digit'});
+  const div = document.createElement("div");
+  div.className = "msg-row";
+  div.innerHTML = `
+    <div class="msg-avatar-sm"><img src="${stickerPath('guide')}" alt="ARYAN"></div>
+    <div>
+      <div class="msg-bubble ai">
+        <div style="font-weight:700; margin-bottom:8px;">🧠 ARYAN Command Center</div>
+        <div class="cmd-grid">
+          <div class="cmd-item" onclick="sendTopic('@advice')">@advice <span>Health tips</span></div>
+          <div class="cmd-item" onclick="sendTopic('@scan')">@scan <span>X-ray upload</span></div>
+          <div class="cmd-item" onclick="sendTopic('@report')">@report <span>Your results</span></div>
+          <div class="cmd-item" onclick="sendTopic('@book')">@book <span>Book doctor</span></div>
+          <div class="cmd-item" onclick="sendTopic('@quiz')">@quiz <span>Health quiz</span></div>
+          <div class="cmd-item" onclick="sendTopic('@credits')">@credits <span>About team</span></div>
+          <div class="cmd-item" onclick="sendTopic('@history')">@history <span>Past scans</span></div>
+          <div class="cmd-item" onclick="sendTopic('@emergency')">@emergency <span>SOS help</span></div>
+          <div class="cmd-item" onclick="sendTopic('@clear')">@clear <span>Reset chat</span></div>
+        </div>
+      </div>
+      <div class="msg-time">${time}</div>
+    </div>`;
+  box.appendChild(div);
+  setHeaderSticker("guide");
+  scrollBottom();
+}
+
+const QUIZZES = [
+  { q: "What does ResNet50 detect in HealthLens?", opts: ["Bone fractures", "Chest diseases like TB & COVID", "Eye diseases", "Skin conditions"], ans: 1 },
+  { q: "How many chambers does the human heart have?", opts: ["2", "3", "4", "5"], ans: 2 },
+  { q: "What is normal blood oxygen (SpO2) level?", opts: ["70-80%", "85-90%", "95-100%", "60-70%"], ans: 2 },
+  { q: "Which organ is affected in Tuberculosis (TB)?", opts: ["Liver", "Kidneys", "Lungs", "Heart"], ans: 2 },
+  { q: "What imaging does HealthLens use?", opts: ["MRI", "CT Scan", "X-ray (Radiography)", "Ultrasound"], ans: 2 },
+];
+let currentQuiz = 0;
+
+function showQuiz() {
+  const box = document.getElementById("chat-messages");
+  const time = new Date().toLocaleTimeString("en-IN", {hour:'2-digit', minute:'2-digit'});
+  const q = QUIZZES[currentQuiz % QUIZZES.length];
+  const qId = "q" + Date.now();
+  const div = document.createElement("div");
+  div.className = "msg-row";
+  const opts = q.opts.map((o, i) => `<div class="quiz-opt" id="${qId}_${i}" onclick="answerQuiz('${qId}',${i},${q.ans})">${String.fromCharCode(65+i)}. ${o}</div>`).join("");
+  div.innerHTML = `
+    <div class="msg-avatar-sm"><img src="${stickerPath('quiz_mode')}" alt="ARYAN"></div>
+    <div>
+      <div class="msg-bubble ai">
+        <div class="quiz-card">
+          <div class="quiz-q">🧠 Quiz Time! ${q.q}</div>
+          <div class="quiz-opts">${opts}</div>
+        </div>
+      </div>
+      <div class="msg-time">${time}</div>
+    </div>`;
+  box.appendChild(div);
+  setHeaderSticker("quiz_mode");
+  scrollBottom();
+  currentQuiz++;
+}
+
+function answerQuiz(qId, chosen, correct) {
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById(`${qId}_${i}`);
+    if (!el) continue;
+    el.onclick = null;
+    if (i === correct) el.classList.add("correct");
+    else if (i === chosen && i !== correct) el.classList.add("wrong");
+  }
+  if (chosen === correct) {
+    appendAiMsg("🎉 Correct! You're smarter than you look! 😄 (Just kidding, you're clearly brilliant!)", "celebrate");
+  } else {
+    appendAiMsg(`Not quite! 😅 The correct answer was option ${String.fromCharCode(65+correct)}. But hey, now you know! Type @quiz for another round! 🧠`, "disappointed");
+  }
+}
+
+function showCredits() {
+  appendAiMsg(`🌟 **About My Creators — The NYSP Team**\n\n👑 **Nikhil Rathod (Captain Nick)** — Founder & Lead Dev\n🧠 **Yadvi Bhandarkar** — Model Specialist\n💻 **Shefali Raichand** — Frontend & UI/UX Lead\n⚙️ **Piyush Kolte** — Data Engineering\n\nBuilt at JDCOEM • HealthLens B.Tech Final Year Project\n📧 NYSPTEAM23@GMAIL.COM\n\nThey built me to protect lives. I'm proud of them! 💙`, "proud");
+}
+
+function showEmergency() {
+  const box = document.getElementById("chat-messages");
+  const time = new Date().toLocaleTimeString("en-IN", {hour:'2-digit', minute:'2-digit'});
+  const div = document.createElement("div");
+  div.className = "msg-row";
+  div.innerHTML = `
+    <div class="msg-avatar-sm"><img src="${stickerPath('emergency')}" alt="ARYAN"></div>
+    <div>
+      <div class="msg-bubble ai" style="border:2px solid #e74c3c; background:#fdecea;">
+        <div style="font-weight:700; color:#c0392b; margin-bottom:6px;">🚨 EMERGENCY CONTACTS</div>
+        <div style="font-size:12px; line-height:1.8; color:#333;">
+          🏥 Emergency: <strong>112</strong><br>
+          🫁 Ambulance: <strong>102 / 108</strong><br>
+          📞 HealthLens Team: <strong>+91 9359807978</strong><br>
+          📧 <strong>NYSPTEAM23@GMAIL.COM</strong>
+        </div>
+        <div style="font-size:11px; color:#e74c3c; margin-top:8px; font-style:italic;">
+          ⚠️ I am an AI assistant, not a doctor. In real emergencies, call 112 immediately.
+        </div>
+      </div>
+      <div class="msg-time">${time}</div>
+    </div>`;
+  box.appendChild(div);
+  setHeaderSticker("emergency");
+  scrollBottom();
+}
+
+/* === TYPING INDICATOR === */
+let typingEl = null;
+function showTyping() {
+  if (typingEl) return;
+  const box = document.getElementById("chat-messages");
+  setHeaderSticker("typing");
+  typingEl = document.createElement("div");
+  typingEl.className = "msg-row";
+  typingEl.id = "typing-indicator";
+  typingEl.innerHTML = `
+    <div class="msg-avatar-sm"><img src="${stickerPath('thinking')}" alt=""></div>
+    <div class="typing-bubble">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>`;
+  box.appendChild(typingEl);
+  scrollBottom();
+  document.getElementById("send-btn").disabled = true;
+}
+
+function hideTyping() {
+  const el = document.getElementById("typing-indicator");
+  if (el) el.remove();
+  typingEl = null;
+  document.getElementById("send-btn").disabled = false;
+}
+
+/* === CHAT CLEAR === */
+function clearChat() {
+  document.getElementById("chat-messages").innerHTML = "";
+  conversationHistory = [];
+  repeatCount = {};
+  lastUserMsg = "";
+  resetToGlobal();
+  document.getElementById("greeting-banner").classList.remove("hidden");
+  document.getElementById("topics-strip").classList.remove("hidden");
+  updateGreeting();
+  setTimeout(() => sendWelcome(), 300);
+}
+
+/* === HELPERS === */
+function scrollBottom() {
+  const box = document.getElementById("chat-messages");
+  setTimeout(() => box.scrollTop = box.scrollHeight, 50);
+}
+
+function formatText(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/\n/g, "<br>");
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+/* Update greeting time every minute */
+setInterval(updateGreeting, 60000);
+</script>
+</body>
+</html>

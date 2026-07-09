@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARYAN — AI Profile | HealthLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:linear-gradient(135deg,#060c1a 0%,#0d1b3e 50%,#061228 100%);min-height:100vh;font-family:'Inter',sans-serif;color:#fff}
+    .bg-orbs{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+    .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.14}
+    .orb.a{width:500px;height:500px;background:radial-gradient(circle,#2563eb,transparent);top:-100px;left:-80px;animation:oa 12s ease-in-out infinite}
+    .orb.b{width:400px;height:400px;background:radial-gradient(circle,#7c3aed,transparent);bottom:-80px;right:-60px;animation:ob 10s ease-in-out infinite}
+    @keyframes oa{0%,100%{transform:translate(0,0)}50%{transform:translate(50px,70px)}}
+    @keyframes ob{0%,100%{transform:translate(0,0)}50%{transform:translate(-40px,-50px)}}
+    .grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(37,99,235,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.04) 1px,transparent 1px);background-size:44px 44px}
+
+    .container{position:relative;z-index:1;max-width:780px;margin:0 auto;padding:40px 20px 80px}
+    .back-link{display:inline-flex;align-items:center;gap:7px;color:rgba(255,255,255,0.5);font-size:13px;font-weight:600;text-decoration:none;margin-bottom:40px;transition:color 0.2s}
+    .back-link:hover{color:#60a5fa}
+    .back-link svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+    /* Hero */
+    .hero{text-align:center;margin-bottom:48px}
+    .hero-avatar{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:44px;margin:0 auto 20px;position:relative;box-shadow:0 0 0 4px rgba(37,99,235,0.2),0 0 40px rgba(37,99,235,0.25)}
+    .hero-avatar::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(37,99,235,0.35);animation:ring-pulse 2.5s ease-in-out infinite}
+    @keyframes ring-pulse{0%,100%{transform:scale(1);opacity:0.7}50%{transform:scale(1.06);opacity:0.3}}
+    .online-badge{position:absolute;bottom:4px;right:4px;width:18px;height:18px;background:#22c55e;border-radius:50%;border:3px solid #060c1a;animation:green-pulse 2s infinite}
+    @keyframes green-pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,0.7)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+    .hero-name{font-size:clamp(32px,6vw,52px);font-weight:800;font-family:'Space Grotesk',sans-serif;background:linear-gradient(135deg,#fff,#93c5fd 40%,#67e8f9 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.03em;margin-bottom:6px}
+    .hero-full{font-size:14px;color:rgba(255,255,255,0.45);font-weight:500;margin-bottom:16px;letter-spacing:0.2px}
+    .hero-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px}
+    .hero-chip{background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.3);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;color:#93c5fd}
+    .hero-desc{font-size:15px;color:rgba(255,255,255,0.55);line-height:1.75;max-width:500px;margin:0 auto}
+
+    /* Section cards */
+    .section{background:rgba(255,255,255,0.04);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);border-radius:20px;overflow:hidden;margin-bottom:20px}
+    .section-head{padding:18px 22px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px}
+    .section-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .si-blue{background:rgba(37,99,235,0.2)}
+    .si-cyan{background:rgba(6,182,212,0.2)}
+    .si-violet{background:rgba(124,58,237,0.2)}
+    .si-green{background:rgba(16,185,129,0.2)}
+    .si-red{background:rgba(220,38,38,0.2)}
+    .si-amber{background:rgba(245,158,11,0.2)}
+    .section-head-info h3{font-size:14px;font-weight:800;color:#fff;letter-spacing:0.2px}
+    .section-head-info p{font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:500}
+    .section-body{padding:22px}
+
+    /* Info grid */
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:500px){.info-grid{grid-template-columns:1fr}}
+    .info-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:15px}
+    .info-card-label{font-size:10.5px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+    .info-card-value{font-size:14px;font-weight:700;color:#e2e8f0}
+
+    /* Feature list */
+    .feature-list{display:flex;flex-direction:column;gap:10px}
+    .feature-item{display:flex;align-items:flex-start;gap:14px;padding:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;transition:all 0.2s}
+    .feature-item:hover{background:rgba(37,99,235,0.07);border-color:rgba(37,99,235,0.2);transform:translateX(4px)}
+    .feature-icon{font-size:22px;flex-shrink:0;width:36px;text-align:center;margin-top:1px}
+    .feature-info h4{font-size:13.5px;font-weight:700;color:#e2e8f0;margin-bottom:3px}
+    .feature-info p{font-size:12px;color:rgba(255,255,255,0.42);line-height:1.55}
+
+    /* Commands grid */
+    .cmd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+    .cmd-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:13px;padding:13px 14px;transition:all 0.2s}
+    .cmd-card:hover{background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.25);transform:translateY(-3px)}
+    .cmd-name{font-size:13px;font-weight:800;color:#93c5fd;font-family:'Space Grotesk',sans-serif;margin-bottom:4px}
+    .cmd-desc{font-size:11.5px;color:rgba(255,255,255,0.4);line-height:1.5}
+
+    /* Team */
+    .team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+    .team-card{text-align:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:18px 12px;transition:all 0.2s}
+    .team-card:hover{background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.25);transform:translateY(-4px)}
+    .team-av{width:52px;height:52px;border-radius:50%;margin:0 auto 11px;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid rgba(255,255,255,0.15)}
+    .team-name{font-size:13px;font-weight:800;color:#e2e8f0}
+    .team-role{font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px}
+
+    /* Stats row */
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+    .stat{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:16px;text-align:center;transition:all 0.2s}
+    .stat:hover{background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.25);transform:translateY(-3px)}
+    .stat-val{font-size:28px;font-weight:900;color:#60a5fa;font-family:'Space Grotesk',sans-serif}
+    .stat-label{font-size:10.5px;color:rgba(255,255,255,0.4);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+
+    /* CTA */
+    .cta{text-align:center;margin-top:40px}
+    .cta-btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-size:14px;font-weight:700;padding:13px 28px;border-radius:14px;text-decoration:none;transition:all 0.25s;box-shadow:0 4px 20px rgba(37,99,235,0.35)}
+    .cta-btn:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(37,99,235,0.45)}
+  </style>
+</head>
+<body>
+  <div class="bg-orbs"><div class="orb a"></div><div class="orb b"></div></div>
+  <div class="grid-bg"></div>
+
+  <div class="container">
+    <a href="index.html" class="back-link">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Demo
+    </a>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-avatar">🤖<div class="online-badge"></div></div>
+      <h1 class="hero-name">ARYAN</h1>
+      <p class="hero-full">Adaptive Responsive Youth AI Navigator · v5.2</p>
+      <div class="hero-chips">
+        <span class="hero-chip">🧠 Gemini 1.5 Flash</span>
+        <span class="hero-chip">🏥 HealthLens AI</span>
+        <span class="hero-chip">🫁 ResNet50 CNN</span>
+        <span class="hero-chip">⚡ Enterprise Ready</span>
+      </div>
+      <p class="hero-desc">An intelligent, emotionally adaptive AI healthcare assistant built specifically for the HealthLens platform — designed for chest disease detection, patient navigation, and healthcare guidance at JDCOEM, Nagpur.</p>
+    </div>
+
+    <!-- Identity -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-icon si-blue">🤖</div>
+        <div class="section-head-info"><h3>Core Identity</h3><p>AI model specifications and metadata</p></div>
+      </div>
+      <div class="section-body">
+        <div class="info-grid">
+          <div class="info-card"><div class="info-card-label">Full Name</div><div class="info-card-value">ARYAN v5.2</div></div>
+          <div class="info-card"><div class="info-card-label">AI Engine</div><div class="info-card-value">Gemini 1.5 Flash</div></div>
+          <div class="info-card"><div class="info-card-label">Disease Detection</div><div class="info-card-value">ResNet50 CNN</div></div>
+          <div class="info-card"><div class="info-card-label">Platform</div><div class="info-card-value">HealthLens AI</div></div>
+          <div class="info-card"><div class="info-card-label">Institution</div><div class="info-card-value">JDCOEM, Nagpur</div></div>
+          <div class="info-card"><div class="info-card-label">Status</div><div class="info-card-value">🟢 Online · Active</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-icon si-cyan">📊</div>
+        <div class="section-head-info"><h3>Platform Statistics</h3><p>HealthLens AI capabilities at a glance</p></div>
+      </div>
+      <div class="section-body">
+        <div class="stats-row">
+          <div class="stat"><div class="stat-val">10</div><div class="stat-label">Platform Pages</div></div>
+          <div class="stat"><div class="stat-val">200+</div><div class="stat-label">Stickers & Emojis</div></div>
+          <div class="stat"><div class="stat-val">30+</div><div class="stat-label">Slash Commands</div></div>
+          <div class="stat"><div class="stat-val">6</div><div class="stat-label">Color Themes</div></div>
+          <div class="stat"><div class="stat-val">95%</div><div class="stat-label">TB Detection Accuracy</div></div>
+          <div class="stat"><div class="stat-val">3</div><div class="stat-label">AI Modes</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-icon si-violet">✨</div>
+        <div class="section-head-info"><h3>Core Features</h3><p>What ARYAN can do for you</p></div>
+      </div>
+      <div class="section-body">
+        <div class="feature-list">
+          <div class="feature-item"><div class="feature-icon">🏥</div><div class="feature-info"><h4>Medical Q&A</h4><p>Intelligent healthcare guidance powered by Google Gemini 1.5 Flash — ask anything from symptoms to treatment protocols.</p></div></div>
+          <div class="feature-item"><div class="feature-icon">🧭</div><div class="feature-info"><h4>Smart Navigation</h4><p>ARYAN can navigate to any of the 10 HealthLens pages on your behalf using natural language commands.</p></div></div>
+          <div class="feature-item"><div class="feature-icon">🫁</div><div class="feature-info"><h4>Chest Disease Knowledge</h4><p>Deep knowledge of TB, Pneumonia, COVID-19 detection. Guides users through X-ray analysis workflows.</p></div></div>
+          <div class="feature-item"><div class="feature-icon">🚨</div><div class="feature-info"><h4>Emergency Mode</h4><p>Instantly switches to emergency guidance — provides first aid, calls to 108/112, and calm step-by-step instructions.</p></div></div>
+          <div class="feature-item"><div class="feature-icon">🎙️</div><div class="feature-info"><h4>Voice I/O</h4><p>Full voice input via Web Speech API and optional Text-to-Speech output for hands-free operation.</p></div></div>
+          <div class="feature-item"><div class="feature-icon">💕</div><div class="feature-info"><h4>Emotional AI (Nikh Mode)</h4><p>Activated by @Yadvi30 — a special emotionally intelligent mode with Hindi/English mix, songs, memories, and love meter.</p></div></div>
+          <div class="feature-item"><div class="feature-icon">📌</div><div class="feature-info"><h4>Message Management</h4><p>Pin important messages, bookmark responses, react with emojis, copy to clipboard, and search through history.</p></div></div>
+          <div class="feature-item"><div class="feature-icon">⚡</div><div class="feature-info"><h4>Health Tools</h4><p>Built-in BMI calculator, water tracker, step counter, mood check-in, calorie calculator, breathing exercises, and meditation timer.</p></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commands -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-icon si-green">⌨️</div>
+        <div class="section-head-info"><h3>Slash Commands</h3><p>Type these in the chatbot to activate features</p></div>
+      </div>
+      <div class="section-body">
+        <div class="cmd-grid">
+          <div class="cmd-card"><div class="cmd-name">/bmi</div><div class="cmd-desc">BMI calculator card</div></div>
+          <div class="cmd-card"><div class="cmd-name">/water</div><div class="cmd-desc">Water intake tracker</div></div>
+          <div class="cmd-card"><div class="cmd-name">/steps</div><div class="cmd-desc">Daily step counter</div></div>
+          <div class="cmd-card"><div class="cmd-name">/mood</div><div class="cmd-desc">Mood check-in card</div></div>
+          <div class="cmd-card"><div class="cmd-name">/breathe</div><div class="cmd-desc">4-7-8 breathing exercise</div></div>
+          <div class="cmd-card"><div class="cmd-name">/meditate</div><div class="cmd-desc">Meditation timer</div></div>
+          <div class="cmd-card"><div class="cmd-name">/calories</div><div class="cmd-desc">TDEE calorie calculator</div></div>
+          <div class="cmd-card"><div class="cmd-name">/tip</div><div class="cmd-desc">Random health tip</div></div>
+          <div class="cmd-card"><div class="cmd-name">/hug</div><div class="cmd-desc">Virtual hug card</div></div>
+          <div class="cmd-card"><div class="cmd-name">/song</div><div class="cmd-desc">Song of the moment</div></div>
+          <div class="cmd-card"><div class="cmd-name">/stats</div><div class="cmd-desc">Session statistics</div></div>
+          <div class="cmd-card"><div class="cmd-name">/search</div><div class="cmd-desc">Search message history</div></div>
+          <div class="cmd-card"><div class="cmd-name">/reminder</div><div class="cmd-desc">Set a reminder</div></div>
+          <div class="cmd-card"><div class="cmd-name">/dark</div><div class="cmd-desc">Enable dark mode</div></div>
+          <div class="cmd-card"><div class="cmd-name">/light</div><div class="cmd-desc">Enable light mode</div></div>
+          <div class="cmd-card"><div class="cmd-name">/help</div><div class="cmd-desc">Show all commands</div></div>
+          <div class="cmd-card"><div class="cmd-name">/emergency</div><div class="cmd-desc">Activate emergency mode</div></div>
+          <div class="cmd-card"><div class="cmd-name">/clear</div><div class="cmd-desc">Clear chat history</div></div>
+        </div>
+        <div style="margin-top:16px;padding:14px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:13px">
+          <p style="font-size:12.5px;color:rgba(255,255,255,0.55);line-height:1.65">
+            <strong style="color:#93c5fd">Special Triggers:</strong>
+            <code style="background:rgba(255,255,255,0.08);padding:2px 7px;border-radius:5px;font-size:11.5px">@Yadvi30</code> — Activate Nikh special mode &nbsp;&bull;&nbsp;
+            <code style="background:rgba(255,255,255,0.08);padding:2px 7px;border-radius:5px;font-size:11.5px">@emergency</code> — Emergency mode &nbsp;&bull;&nbsp;
+            <code style="background:rgba(255,255,255,0.08);padding:2px 7px;border-radius:5px;font-size:11.5px">@normal</code> — Return to normal mode &nbsp;&bull;&nbsp;
+            <code style="background:rgba(255,255,255,0.08);padding:2px 7px;border-radius:5px;font-size:11.5px">@exit</code> — Exit current special mode
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-icon si-amber">👥</div>
+        <div class="section-head-info"><h3>Meet the Team</h3><p>Built by Manthan Pixel Hub at JDCOEM, Nagpur</p></div>
+      </div>
+      <div class="section-body">
+        <div class="team-grid">
+          <div class="team-card">
+            <div class="team-av" style="background:linear-gradient(135deg,#2563eb,#1d4ed8)">👑</div>
+            <div class="team-name">Nikhil Rathod</div>
+            <div class="team-role">Root / Founder / Lead</div>
+          </div>
+          <div class="team-card">
+            <div class="team-av" style="background:linear-gradient(135deg,#e11d8a,#be185d)">🌸</div>
+            <div class="team-name">Yadvi</div>
+            <div class="team-role">Lead Model Developer</div>
+          </div>
+          <div class="team-card">
+            <div class="team-av" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">🎨</div>
+            <div class="team-name">Shefali</div>
+            <div class="team-role">Operations / UI</div>
+          </div>
+          <div class="team-card">
+            <div class="team-av" style="background:linear-gradient(135deg,#059669,#047857)">⚙️</div>
+            <div class="team-name">Piyush</div>
+            <div class="team-role">Backend Developer</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diseases -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-icon si-red">🫁</div>
+        <div class="section-head-info"><h3>Chest Disease Detection</h3><p>AI-powered X-ray analysis capabilities</p></div>
+      </div>
+      <div class="section-body">
+        <div class="info-grid">
+          <div class="info-card"><div class="info-card-label">Tuberculosis (TB)</div><div class="info-card-value">95%+ Detection Sensitivity</div></div>
+          <div class="info-card"><div class="info-card-label">Pneumonia</div><div class="info-card-value">ResNet50 CNN Powered</div></div>
+          <div class="info-card"><div class="info-card-label">COVID-19</div><div class="info-card-value">Chest X-Ray Pattern Analysis</div></div>
+          <div class="info-card"><div class="info-card-label">Normal / Healthy</div><div class="info-card-value">High Specificity Screening</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta">
+      <a href="aryan-chatbot-integration.html" class="cta-btn">🤖 Open ARYAN Chatbot</a>
+    </div>
+  </div>
+</body>
+</html>

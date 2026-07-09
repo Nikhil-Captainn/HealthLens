@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthLens | Medical Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="global.css">
+
+    <style>
+        /* Base Layout Variables */
+        :root {
+            --sidebar-bg: linear-gradient(180deg, #2a7fba 0%, #1e6aa0 100%); 
+            --app-bg: #eef2f9; 
+            --card-bg: #ffffff; 
+            --article-card-bg: #f4fafe; 
+            --text-dark: #2d3748; 
+            --text-muted: #64748b; 
+            --border-color: #cbd5e1; 
+            --card-border: #000000; 
+            --primary-color: #2a7fba;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --shadow-pop: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] {
+            --sidebar-bg: linear-gradient(180deg, #111111 0%, #000000 100%); 
+            --app-bg: #000000; 
+            --card-bg: #111111; 
+            --article-card-bg: #111111; 
+            --text-dark: #f8fafc; 
+            --text-muted: #94a3b8; 
+            --border-color: #262626;
+            --card-border: #262626; 
+            --primary-color: #3b82f6;
+            --shadow-pop: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        body { display: flex; height: 100vh; overflow: hidden; background: var(--app-bg); margin: 0;}
+        .app-container { width: 100%; height: 100vh; display: flex; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 90px; background: var(--sidebar-bg); display: flex; flex-direction: column; align-items: center; padding: 40px 10px; border-radius: 0 30px 30px 0; z-index: 100; box-shadow: 2px 0 15px rgba(0,0,0,0.1); flex-shrink: 0; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s, border-radius 0.4s; overflow: hidden; }
+        .sidebar:hover { width: 260px; align-items: flex-start; padding: 40px 20px; border-radius: 0 40px 40px 0; }
+        .logo-img-icon { width: 45px; height: 45px; object-fit: contain; margin-bottom: 50px; transition: 0.3s; display: block; }
+        .logo-img-full { width: 160px; object-fit: contain; margin-bottom: 50px; padding-left: 10px; transition: 0.3s; display: none; }
+        .sidebar:hover .logo-img-icon { display: none; }
+        .sidebar:hover .logo-img-full { display: block; animation: fadeIn 0.4s; }
+
+        .nav-list { list-style: none; flex-grow: 1; padding: 0; width: 100%; display: flex; flex-direction: column; align-items: center;}
+        .sidebar:hover .nav-list { align-items: flex-start; }
+        .nav-item { display: flex; align-items: center; gap: 15px; padding: 14px; margin-bottom: 8px; border-radius: 15px; cursor: pointer; font-size: 14px; opacity: 0.7; transition: 0.3s; color: white; font-weight: 600; width: 50px; justify-content: center; }
+        .sidebar:hover .nav-item { width: 100%; justify-content: flex-start; padding: 14px 20px; }
+        .nav-item:hover, .nav-item.active { background: rgba(255, 255, 255, 0.2); opacity: 1; font-weight: 700; }
+        .nav-item i { font-size: 20px; flex-shrink: 0; }
+        .nav-text { display: none; white-space: nowrap; opacity: 0; }
+        .sidebar:hover .nav-text { display: block; animation: fadeInText 0.4s forwards; }
+        
+        /* 🟢 RESTORED: This is the exact line that was missing! */
+        @keyframes fadeInText { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; padding: 30px 40px; overflow-y: auto; }
+        .main-content::-webkit-scrollbar { width: 6px; }
+        .main-content::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+
+        /* HEADER */
+        .top-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; flex-shrink: 0;}
+        .header-left { display: flex; flex-direction: column; justify-content: flex-start;}
+        .header-left h2 { font-size: 28px; color: var(--text-dark); font-weight: 800; line-height: 1;}
+        .header-left p { color: var(--text-muted); font-size: 14px; margin-top: 8px; font-weight: 500;}
+        
+        .header-right { display: flex; align-items: center; gap: 15px; height: 35px; }
+        .icon-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--card-bg); display: flex; justify-content: center; align-items: center; color: var(--text-dark); cursor: pointer; box-shadow: var(--shadow-pop); border: 1px solid var(--border-color); transition: 0.3s;}
+        .icon-btn:hover { color: var(--primary-color); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(42, 127, 186, 0.2); }
+        
+        .user-profile { display: flex; align-items: center; gap: 8px; background: var(--card-bg); padding: 4px 12px 4px 4px; border-radius: 30px; cursor: pointer; border: 1px solid var(--border-color); box-shadow: var(--shadow-pop); transition: 0.3s; height: 42px;}
+        .user-profile:hover { border-color: var(--primary-color); background: var(--hover-bg); }
+        .user-profile img { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--app-bg); object-fit: cover;}
+        .user-name { font-size: 13px; font-weight: 700; color: var(--text-dark); padding-right: 4px;}
+
+        /* --- LIBRARY SPECIFIC CSS --- */
+        .library-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 12px 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow-pop);
+        }
+        .search-box input {
+            border: none; outline: none; background: transparent;
+            color: var(--text-dark); font-size: 14px; width: 100%; margin-left: 10px; font-weight: 600;
+        }
+
+        .category-pills {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .pill {
+            padding: 8px 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: var(--shadow-pop);
+        }
+        .pill:hover, .pill.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Featured Article */
+        .featured-article {
+            background: var(--article-card-bg);
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            border: 1px solid var(--card-border); 
+            box-shadow: var(--shadow-pop);
+            margin-bottom: 30px;
+            transition: 0.3s;
+            border-bottom: 4px solid var(--primary-color); 
+        }
+        .featured-article:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 15px 35px rgba(42, 127, 186, 0.15);
+            transform: translateY(-4px);
+        }
+        .featured-img {
+            width: 40%;
+            background: url('https://images.unsplash.com/photo-1576086213369-97a306d36557?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80') center/cover;
+            min-height: 250px;
+        }
+        .featured-content {
+            padding: 40px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .tag-main {
+            font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--primary-color); margin-bottom: 10px; display: inline-block;
+        }
+        .featured-content h3 { font-size: 24px; color: var(--text-dark); font-weight: 800; margin-bottom: 15px;}
+        .featured-content p { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 25px;}
+
+        /* Dynamic Article Grid */
+        .article-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            padding-bottom: 40px;
+        }
+
+        .article-card {
+            background: var(--article-card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--card-border); 
+            border-bottom: 4px solid var(--primary-color); 
+            box-shadow: var(--shadow-pop);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .article-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            border-color: var(--primary-color);
+        }
+
+        .card-banner {
+            width: calc(100% + 50px);
+            margin: -25px -25px 20px -25px;
+            height: 200px;
+            position: relative;
+            border-radius: 19px 19px 0 0;
+            overflow: hidden;
+            background-color: var(--article-card-bg); 
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-banner .banner-blur {
+            position: absolute;
+            inset: -20px;
+            background-size: cover;
+            background-position: center;
+            filter: blur(15px);
+            opacity: 0.5;
+            z-index: 1;
+        }
+
+        .card-banner .banner-img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; 
+            object-position: top center; 
+            z-index: 2;
+        }
+
+        .card-banner .tag {
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            background: var(--card-bg);
+            color: var(--primary-color);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            z-index: 3;
+        }
+
+        .article-card h4 { font-size: 17px; color: var(--text-dark); font-weight: 800; margin-bottom: 10px; line-height: 1.3;}
+        .article-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; flex-grow: 1; font-weight: 500;}
+        
+        .read-btn {
+            font-size: 13px; font-weight: 700; color: var(--primary-color);
+            text-decoration: none; display: flex; align-items: center; gap: 5px;
+            margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border-color); width: 100%;
+            transition: 0.2s; background: none; cursor: pointer; border-bottom: none; border-left: none; border-right: none;
+        }
+        .read-btn:hover { gap: 10px; color: #4f46e5; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .featured-article { flex-direction: column; }
+            .featured-img { width: 100%; height: 200px; }
+            .featured-content { padding: 25px; }
+        }
+    </style>
+</head>
+<body id="app-root">
+
+    <div class="app-container">
+        
+        <aside class="sidebar">
+            <img src="assets/logo_health_lens_transparent_only_logo.png" alt="HealthLens Icon" class="logo-img-icon" onerror="this.style.display='none';">
+            <img src="assets/logo_health_lens_transparent_both_text_and_logo.png" alt="HealthLens Full" class="logo-img-full" onerror="this.style.display='none';">
+            
+            <ul class="nav-list">
+                <li class="nav-item" onclick="location.href='index.html'"><i data-lucide="home"></i> <span class="nav-text">Home</span></li>
+                <li class="nav-item" onclick="location.href='Services.html'"><i data-lucide="briefcase-medical"></i> <span class="nav-text">Our Services</span></li>
+                <li class="nav-item active"><i data-lucide="book-open"></i> <span class="nav-text">Medical Library</span></li>
+                <li class="nav-item" onclick="location.href='insights.html'"><i data-lucide="bar-chart-2"></i> <span class="nav-text">Data Insights</span></li>
+                
+                <div style="height: 20px; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.1); margin: 10px 0;"></div>
+                
+                <li class="nav-item" onclick="location.href='login.html'" id="login-nav-item"><i data-lucide="log-in"></i> <span class="nav-text">Sign In / Register</span></li>
+                <li class="nav-item" onclick="location.href='dashboard.html'" id="dash-nav-item" style="display:none; color: #60a5fa;"><i data-lucide="layout-dashboard"></i> <span class="nav-text">Go to Dashboard</span></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            
+            <div class="top-header">
+                <div class="header-left">
+                    <h2>Clinical Knowledge Base</h2>
+                    <p>Live, searchable medical literature retrieved from open internet databases.</p>
+                </div>
+                <div class="header-right">
+                    <button class="icon-btn global-theme-toggle" onclick="toggleGlobalTheme()" id="themeBtn" title="Toggle Dark Mode">
+                        <i data-lucide="moon"></i>
+                    </button>
+                    
+                    <div id="header-auth-container">
+                        <button class="btn btn-blue" id="header-login-btn" onclick="location.href='login.html'" style="padding: 10px 20px; border-radius: 12px; font-size: 13px; border: none; cursor: pointer;">Sign In to Portal</button>
+                        
+                        <div class="user-profile" id="header-profile" onclick="location.href='profile.html'" style="display: none;">
+                            <img id="user-avatar" src="https://api.dicebear.com/7.x/lorelei/svg?seed=User" alt="User">
+                            <span class="user-name" id="user-name-display">Loading...</span>
+                            <i data-lucide="chevron-down" style="width: 14px; color: var(--text-muted);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="library-controls">
+                <div class="search-box">
+                    <i data-lucide="search" style="color: var(--text-muted);"></i>
+                    <input type="text" id="apiSearchBox" placeholder="Search live medical data (e.g. Asthma)...">
+                </div>
+                <div class="category-pills">
+                    <div class="pill active" onclick="setCategory(this, 'Respiratory system disease')">Respiratory Diseases</div>
+                    <div class="pill" onclick="setCategory(this, 'Medical artificial intelligence')">AI Technology</div>
+                    <div class="pill" onclick="setCategory(this, 'Chest radiograph')">Radiography Guide</div>
+                    <div class="pill" onclick="setCategory(this, 'COVID-19')">COVID-19</div>
+                </div>
+            </div>
+
+            <div class="featured-article">
+                <div class="featured-img"></div>
+                <div class="featured-content">
+                    <span class="tag-main">Deep Learning Architecture</span>
+                    <h3>How ResNet50 Transforms Chest Radiography</h3>
+                    <p>Understand the mechanics behind our core diagnostic engine. Learn how Residual Neural Networks (ResNet50) solve the vanishing gradient problem, allowing for deep feature extraction from complex chest X-rays to identify Tuberculosis and COVID-19 markers with high fidelity.</p>
+                    <a href="https://en.wikipedia.org/wiki/Residual_neural_network" target="_blank" class="read-btn" style="border: none; padding: 0; margin: 0; width: auto; font-size: 14px;">Read Wikipedia Documentation <i data-lucide="external-link" style="width: 16px;"></i></a>
+                </div>
+            </div>
+
+            <div class="article-grid" id="dynamic-article-grid">
+                </div>
+
+        </main>
+    </div>
+
+    <script src="global.js"></script>
+    <script>
+        async function fetchMedicalData(query) {
+            const grid = document.getElementById('dynamic-article-grid');
+            
+            grid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: var(--text-muted);">
+                    <i data-lucide="loader-2" style="width: 40px; height: 40px; animation: spin 1s linear infinite; color: var(--primary-color);"></i>
+                    <p style="margin-top: 15px; font-weight: 600;">Scanning global databases for "${query}"...</p>
+                </div>
+            `;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            try {
+                const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&prop=pageimages|extracts&pithumbsize=600&exintro=1&explaintext=1&exchars=140&format=json&origin=*`);
+                const data = await res.json();
+                
+                grid.innerHTML = ''; 
+                
+                const pages = data.query && data.query.pages ? Object.values(data.query.pages) : [];
+
+                if(pages.length === 0) {
+                    grid.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1/-1; font-weight: 600;">No clinical articles found for this search. Try a different medical term.</p>';
+                    return;
+                }
+
+                const fallbacks = [
+                    'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=600&q=80'
+                ];
+
+                pages.slice(0, 9).forEach(page => {
+                    const title = page.title;
+                    const snippet = page.extract ? page.extract + '...' : 'Clinical data available in the full documentation...';
+                    const articleUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`;
+                    
+                    const imgUrl = page.thumbnail ? page.thumbnail.source : fallbacks[Math.floor(Math.random() * fallbacks.length)];
+                    
+                    const card = document.createElement('div');
+                    card.className = 'article-card';
+                    
+                    card.innerHTML = `
+                        <div class="card-banner">
+                            <div class="banner-blur" style="background-image: url('${imgUrl}')"></div>
+                            <img src="${imgUrl}" class="banner-img" alt="${title}">
+                            <span class="tag">Clinical Database</span>
+                        </div>
+                        <h4>${title}</h4>
+                        <p>${snippet}</p>
+                        <a href="${articleUrl}" target="_blank" class="read-btn">Read Live Article <i data-lucide="external-link" style="width: 14px;"></i></a>
+                    `;
+                    grid.appendChild(card);
+                });
+                
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } catch (err) {
+                grid.innerHTML = '<p style="color: var(--danger-color); text-align: center; grid-column: 1/-1; font-weight: 700;">Failed to fetch live data. Please check your internet connection.</p>';
+            }
+        }
+
+        window.setCategory = function(element, query) {
+            document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('apiSearchBox').value = ''; 
+            fetchMedicalData(query);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            fetchMedicalData('Respiratory system disease');
+
+            const searchBox = document.getElementById('apiSearchBox');
+            searchBox.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active')); 
+                    fetchMedicalData(searchBox.value || 'Health');
+                }
+            });
+
+            const isLoggedIn = localStorage.getItem('healthlens_logged_in') === 'true';
+            const activeUser = localStorage.getItem("activeClinician");
+            
+            if (isLoggedIn) {
+                const loginNav = document.getElementById('login-nav-item');
+                const dashNav = document.getElementById('dash-nav-item');
+                const headerLoginBtn = document.getElementById('header-login-btn');
+                const headerProfile = document.getElementById('header-profile');
+                const userNameDisplay = document.getElementById('user-name-display');
+                const userAvatar = document.getElementById('user-avatar');
+
+                if(loginNav) loginNav.style.display = 'none';
+                if(dashNav) dashNav.style.display = 'flex';
+                if(headerLoginBtn) headerLoginBtn.style.display = 'none';
+                if(headerProfile) headerProfile.style.display = 'flex';
+                
+                const p = JSON.parse(localStorage.getItem(`profileData_${activeUser}`)) || {};
+                if(userNameDisplay) userNameDisplay.innerText = p.name || activeUser;
+                if(localStorage.getItem('healthlens_user_avatar') && userAvatar) userAvatar.src = localStorage.getItem('healthlens_user_avatar');
+            }
+        });
+    </script>
+</body>
+</html>

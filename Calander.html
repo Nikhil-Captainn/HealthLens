@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Calendar Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f4f7fe;
+            --white: #ffffff;
+            --text-main: #2b3648;
+            --text-light: #8f9bba;
+            --sidebar-hover: #f0f4f9;
+            
+            /* Pastel Image 1 Colors */
+            --c-blue-bg: #e8f0fe; --c-blue-txt: #4285f4;
+            --c-red-bg: #fce8e6; --c-red-txt: #ea4335;
+            --c-green-bg: #e6f4ea; --c-green-txt: #34a853;
+            --c-yellow-bg: #fef7e0; --c-yellow-txt: #fbbc04;
+            --c-purple-bg: #f3e8fd; --c-purple-txt: #9334e6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Nunito', sans-serif; }
+        
+        body { background-color: var(--bg); color: var(--text-main); height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+
+        /* Main Container */
+        .dashboard {
+            background: var(--white);
+            width: 100%; max-width: 1400px; height: 90vh;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            display: grid;
+            grid-template-columns: 220px 1fr 350px;
+            overflow: hidden;
+        }
+
+        /* 1. Sidebar */
+        .sidebar { padding: 40px 20px; border-right: 1px solid #edf2f7; display: flex; flex-direction: column; gap: 15px; }
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 40px; text-align: center; }
+        .nav-item { padding: 12px 20px; border-radius: 12px; color: var(--text-light); font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .nav-item.active { background: #fff4f4; color: #ff6b6b; font-weight: 700; }
+        .nav-item:hover:not(.active) { background: var(--sidebar-hover); }
+
+        /* 2. Middle: Timetable */
+        .main-content { padding: 40px; overflow-y: auto; }
+        .header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 5px; }
+        
+        .timetable-header { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; margin-bottom: 20px; }
+        .timetable-header h3 { font-size: 1.2rem; font-weight: 700; }
+        .current-date-badge { background: var(--bg); padding: 8px 15px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; color: var(--text-light); }
+
+        .time-slots { display: flex; flex-direction: column; gap: 15px; }
+        .slot { display: grid; grid-template-columns: 60px 1fr; gap: 20px; align-items: center; }
+        .time-label { font-size: 0.85rem; font-weight: 700; color: var(--text-light); text-align: right; }
+        
+        /* The exact stacked pastel bars from Image 1 */
+        .task-bar {
+            padding: 15px 25px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; cursor: pointer;
+        }
+        .task-bar:hover { transform: translateX(5px); }
+        .t-title { font-weight: 700; font-size: 1rem; }
+        .t-sub { font-size: 0.8rem; font-weight: 600; opacity: 0.8; margin-top: 4px; }
+        .t-room { font-weight: 800; font-size: 0.9rem; opacity: 0.7; }
+
+        /* 3. Right Side: Calendar & Stats */
+        .right-panel { padding: 40px 30px; border-left: 1px solid #edf2f7; display: flex; flex-direction: column; gap: 40px; overflow-y: auto;}
+        
+        /* Mini Calendar from Image 1 */
+        .mini-cal-wrapper { background: var(--white); }
+        .cal-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 15px; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
+        .cal-day-label { font-size: 0.75rem; font-weight: 700; color: var(--text-light); margin-bottom: 10px; }
+        .cal-date { 
+            width: 35px; height: 35px; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            border-radius: 50%; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: 0.2s; position: relative;
+        }
+        .cal-date:hover { background: var(--bg); }
+        .cal-date.active { background: #2c3e50; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 2px; position: absolute; bottom: 4px; }
+
+        /* Efficiency Ring from Image 2 */
+        .stats-card { background: var(--white); border: 1px solid #edf2f7; border-radius: 20px; padding: 20px; text-align: center; }
+        .ring { width: 100px; height: 100px; border-radius: 50%; border: 8px solid var(--c-blue-bg); border-top-color: var(--c-blue-txt); margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; }
+
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <div class="sidebar">
+        <div class="logo">ChestAI<span style="color:#ff6b6b">.</span></div>
+        <div class="nav-item">Dashboard</div>
+        <div class="nav-item active">Timetable</div>
+        <div class="nav-item">Medications</div>
+        <div class="nav-item">Appointments</div>
+        <div class="nav-item">Reports</div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Hello, Doctor!</h1>
+            <p style="color: var(--text-light); font-weight: 600;">Here is the schedule for your selected date.</p>
+        </div>
+
+        <div class="timetable-header">
+            <h3>Daily Timetable</h3>
+            <div class="current-date-badge" id="displayDate">July 2026, Monday</div>
+        </div>
+
+        <div class="time-slots" id="scheduleContainer">
+            </div>
+    </div>
+
+    <div class="right-panel">
+        
+        <div class="stats-card">
+            <h4 style="margin-bottom: 15px; color: var(--text-light);">Daily Efficiency</h4>
+            <div class="ring">82%</div>
+            <p style="font-size: 0.85rem; font-weight: 700;">Tasks Completed</p>
+        </div>
+
+        <div class="mini-cal-wrapper">
+            <div class="cal-title">July 2026</div>
+            <div class="cal-grid" id="calendarGrid">
+                <div class="cal-day-label">Mon</div><div class="cal-day-label">Tue</div><div class="cal-day-label">Wed</div>
+                <div class="cal-day-label">Thu</div><div class="cal-day-label">Fri</div><div class="cal-day-label">Sat</div><div class="cal-day-label">Sun</div>
+                </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Hardcoded Medical Database mapped to specific dates
+    const scheduleData = {
+        "1": [
+            { time: "08:00", title: "Morning Rounds", sub: "Ward A - Check Vitals", room: "W-A", color: "blue" },
+            { time: "09:30", title: "Chest X-Ray Analysis", sub: "Review 5 Patient Scans", room: "Lab", color: "red" },
+            { time: "11:00", title: "Patient Consultations", sub: "OPD Appointments", room: "Rm 102", color: "green" }
+        ],
+        "2": [
+            { time: "07:30", title: "Staff Briefing", sub: "Daily medical objectives", room: "Conf", color: "purple" },
+            { time: "09:00", title: "Surgery Prep", sub: "Patient: John Doe", room: "OR-2", color: "yellow" },
+            { time: "12:00", title: "Medical Seminar", sub: "New trends in AI imaging", room: "Hall", color: "blue" },
+            { time: "14:30", title: "Post-Op Reviews", sub: "Check recovery stats", room: "ICU", color: "green" }
+        ],
+        "3": [
+            { time: "10:00", title: "Lab Results Review", sub: "Bloodworks & Cultures", room: "Lab", color: "red" },
+            { time: "13:00", title: "Tele-medicine Calls", sub: "Remote patient check-ins", room: "Desk", color: "purple" }
+        ]
+    };
+
+    function renderSchedule(dayNumber) {
+        const container = document.getElementById('scheduleContainer');
+        const displayDate = document.getElementById('displayDate');
+        container.innerHTML = ''; 
+        
+        displayDate.innerText = `0${dayNumber} July 2026`;
+
+        const tasks = scheduleData[dayNumber] || [];
+        
+        if (tasks.length === 0) {
+            container.innerHTML = `<p style="text-align:center; padding: 40px; color: #8f9bba; font-weight: 700;">No medical tasks scheduled for this day.</p>`;
+            return;
+        }
+
+        tasks.forEach(task => {
+            const slot = document.createElement('div');
+            slot.className = 'slot';
+            slot.innerHTML = `
+                <div class="time-label">${task.time}</div>
+                <div class="task-bar" style="background: var(--c-${task.color}-bg); color: var(--c-${task.color}-txt);">
+                    <div>
+                        <div class="t-title">${task.title}</div>
+                        <div class="t-sub">${task.sub}</div>
+                    </div>
+                    <div class="t-room">${task.room}</div>
+                </div>
+            `;
+            container.appendChild(slot);
+        });
+    }
+
+    function initCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        
+        // Generate 14 days for the demo
+        for (let i = 1; i <= 14; i++) {
+            const dateBtn = document.createElement('div');
+            dateBtn.className = `cal-date ${i === 1 ? 'active' : ''}`;
+            dateBtn.innerText = i;
+            
+            // Add a dot indicator if the day has tasks
+            if (scheduleData[i]) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.style.background = '#ea4335';
+                dateBtn.appendChild(dot);
+            }
+
+            // Click Logic: "when i click on two its show two"
+            dateBtn.onclick = () => {
+                document.querySelectorAll('.cal-date').forEach(d => d.classList.remove('active'));
+                dateBtn.classList.add('active');
+                renderSchedule(i);
+            };
+            
+            grid.appendChild(dateBtn);
+        }
+    }
+
+    // Initialize with Day 1
+    initCalendar();
+    renderSchedule(1);
+</script>
+
+</body>
+</html>
