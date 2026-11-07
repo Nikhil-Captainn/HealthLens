@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.applications import ResNet50
+from tensorflow.keras.applications import VGG16
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
@@ -39,7 +39,7 @@ class_weight = {
 print("Using class weights:", class_weight)
 
 # ================= MODEL =================
-base_model = ResNet50(
+base_model = VGG16(
     weights="imagenet",
     include_top=False,
     input_shape=(IMG_SIZE, IMG_SIZE, 3)

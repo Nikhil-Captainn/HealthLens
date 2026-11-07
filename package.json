@@ -1,7 +1,7 @@
 {
   "name": "automated_chest_disease_detection",
   "version": "1.0.0",
-  "description": "AI-driven screening framework utilizing ResNet50 for Tuberculosis and COVID-19 detection.",
+  "description": "AI-driven screening framework utilizing VGG16 for Tuberculosis and COVID-19 detection.",
   "main": "script.js",
   "scripts": {
     "start": "node script.js",
@@ -10,7 +10,7 @@
   },
   "keywords": [
     "chestai",
-    "resnet50",
+    "VGG16",
     "medical-ai"
   ],
   "author": "Nikhil R., Sheefali R., Yadvi B., Piyush K.",

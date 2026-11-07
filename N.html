@@ -996,7 +996,7 @@ const ARYAN_GLOBAL_PROMPT = `You are ARYAN — a 22-year-old, genius health AI g
 Your IQ is 200+. You're a funny nerd who knows everything about health, medicine, and the HealthLens portal.
 You're the upgraded male version of ALIA — ALIA 2.0 — built by the HealthLens team.
 
-HealthLens is an AI-powered chest disease detection system using ResNet50 deep learning model.
+HealthLens is an AI-powered chest disease detection system using VGG16 deep learning model.
 It detects TB, COVID-19, and other chest conditions from X-ray images.
 
 Team who built you (you respect and love them):
@@ -1180,7 +1180,7 @@ async function processMessage(msg) {
       await callGemini("Give me one random fun health tip about lung health or general wellness. Make it 40% funny.", "guide");
       return;
     case "@scan":
-      appendAiMsg("🫁 **Scan Mode!** Ready to analyze your chest X-ray.\n\nPlease upload your X-ray image through the HealthLens portal's main scan page, and our ResNet50 AI will detect TB, COVID-19, and more with high accuracy!\n\n[Go to Scan Page] on the portal 📡", "diagnosis");
+      appendAiMsg("🫁 **Scan Mode!** Ready to analyze your chest X-ray.\n\nPlease upload your X-ray image through the HealthLens portal's main scan page, and our VGG16 AI will detect TB, COVID-19, and more with high accuracy!\n\n[Go to Scan Page] on the portal 📡", "diagnosis");
       return;
     case "@report":
       appendAiMsg("📊 **Report Mode!** Your latest diagnostic report will be available in your HealthLens dashboard.\n\nOur system sends encrypted PDF reports to your email (password = your birth year). Check your inbox! 📧", "report_gen");
@@ -1316,7 +1316,7 @@ async function handleAdminCmd(cmd) {
   const adminData = {
     timestamp: new Date().toLocaleString("en-IN"),
     system: "HealthLens Portal v2.0",
-    model: "ResNet50 + Gemini AI",
+    model: "VGG16 + Gemini AI",
     make_status: "Connected",
     supabase: "Active",
     mongodb: "Active",
@@ -1484,7 +1484,7 @@ function showHelp() {
 }
 
 const QUIZZES = [
-  { q: "What does ResNet50 detect in HealthLens?", opts: ["Bone fractures", "Chest diseases like TB & COVID", "Eye diseases", "Skin conditions"], ans: 1 },
+  { q: "What does VGG16 detect in HealthLens?", opts: ["Bone fractures", "Chest diseases like TB & COVID", "Eye diseases", "Skin conditions"], ans: 1 },
   { q: "How many chambers does the human heart have?", opts: ["2", "3", "4", "5"], ans: 2 },
   { q: "What is normal blood oxygen (SpO2) level?", opts: ["70-80%", "85-90%", "95-100%", "60-70%"], ans: 2 },
   { q: "Which organ is affected in Tuberculosis (TB)?", opts: ["Liver", "Kidneys", "Lungs", "Heart"], ans: 2 },

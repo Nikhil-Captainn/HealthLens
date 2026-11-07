@@ -86,10 +86,18 @@ function runAnalysis() {
         const disease = data.prediction;
         const confidence = data.confidence;
 
-        let status = disease === "Tuberculosis" ? "Urgent" : "Stable";
-        let advice = disease === "Tuberculosis"
-            ? "Immediate molecular testing required."
-            : "No thoracic abnormalities detected.";
+        let status = (disease === "Normal") ? "Stable" : "Urgent";
+        let advice;
+        
+        if (disease === "Tuberculosis") {
+            advice = "Immediate molecular testing required.";
+        } else if (disease === "COVID-19") {
+            advice = "Isolate patient immediately and run PCR test.";
+        } else if (disease === "Pneumonia") {
+            advice = "Monitor oxygen levels and prescribe antibiotics.";
+        } else {
+            advice = "No thoracic abnormalities detected.";
+        }
 
         document.getElementById('res-disease').innerText = disease;
         document.getElementById('res-recall').innerText = confidence;

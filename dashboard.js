@@ -291,7 +291,7 @@ window.runDiagnosticSequence = async function() {
     const typeText = (txt) => { hudText.innerHTML += "<br>> " + txt; }
 
     labelInterval = setInterval(() => window.spawnAILabel(wrapper), 400);
-    const steps = ["INITIALIZING RESNET50 NEURAL FRAMEWORK...", "SCANNING THORACIC RADIOGRAPHIC STRUCTURES...", "MAPPING PATHOLOGY & ANOMALY PROBABILITIES...", "COMPILING FINAL MEDICAL REPORT..."];
+    const steps = ["INITIALIZING VGG16 NEURAL FRAMEWORK...", "SCANNING THORACIC RADIOGRAPHIC STRUCTURES...", "MAPPING PATHOLOGY & ANOMALY PROBABILITIES...", "COMPILING FINAL MEDICAL REPORT..."];
     for (let step of steps) { typeText(step); await new Promise(r => setTimeout(r, 1750)); }
 
     wrapper.classList.add('scan-success');
@@ -554,16 +554,27 @@ window.generateDiagnosticReport = async function(name, file) {
         const isSelf = (name === (p.name || "Nikhil Rathod"));
         const finalPatientId = document.getElementById('patientIdDisplay') ? document.getElementById('patientIdDisplay').innerText : `EMRG-${Math.floor(Math.random()*10000)}`;
         
+        let adviceText = "";
+        if (data.prediction === "Tuberculosis") {
+            adviceText = "Urgent: Isolation and immediate sputum culture required.";
+        } else if (data.prediction === "COVID-19") {
+            adviceText = "Urgent: Isolate patient immediately and run PCR test.";
+        } else if (data.prediction === "Pneumonia") {
+            adviceText = "Attention: Monitor oxygen levels and prescribe antibiotics.";
+        } else {
+            adviceText = "Healthy presentation. Follow up in 6 months.";
+        }
+
         const report = {
-            id: Date.now(), // Unique ID for the archive
+            id: Date.now(), 
             name: name, 
             date: new Date().toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'}), 
             time: new Date().toLocaleTimeString(),
             med: finalPatientId, 
             ihi: "91-" + Math.floor(Math.random()*90000),
-            ass: "AI analyzed the chest radiographic input. The system detected clinical markers using ResNet50 deep transfer learning. Associated symptoms reported: " + (selectedSymptoms.join(', ') || 'None'),
+            ass: "AI analyzed the chest radiographic input. The system detected clinical markers using VGG16 deep transfer learning. Associated symptoms reported: " + (selectedSymptoms.join(', ') || 'None'),
             diag: "Result: " + data.prediction + " [Confidence: " + (data.confidence || '89%') + "]",
-            act: data.prediction === "Tuberculosis" ? "Urgent: Isolation and immediate sputum culture required." : "Healthy presentation. Follow up in 6 months."
+            act: adviceText
         };
 
         // --- NEW ARCHIVE LOGIC ---

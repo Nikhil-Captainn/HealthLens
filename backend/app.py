@@ -9,6 +9,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import tensorflow as tf
+from tensorflow.keras.applications import VGG16
+from tensorflow.keras.layers import Flatten, Dense, Dropout
+from tensorflow.keras.models import Model
 from PIL import Image, UnidentifiedImageError
 import numpy as np
 
@@ -22,27 +25,34 @@ app = Flask(__name__)
 CORS(app, resources={r"/predict": {"origins": "*"}})
 
 # ================= STEP 4: THE ENGINE OPTIMIZER =================
-MODEL_PATH = "tb_model.h5"
+MODEL_PATH = "model_FINAL_BEST.weights.h5"
+IMG_SIZE = 224   # Updated for VGG16
 
 if not os.path.exists(MODEL_PATH):
     print("🚨 FATAL ERROR: MODEL FILE NOT FOUND:", MODEL_PATH)
     exit()
 
 try:
-    # 3. Add compile=False to silence the "absl:Compiled the loaded model" warning
-    model = tf.keras.models.load_model(MODEL_PATH, compile=False)
+    # 1. Build the VGG16 Skeleton
+    base_model = VGG16(weights=None, include_top=False, input_shape=(IMG_SIZE, IMG_SIZE, 3))
+    x = base_model.output
+    x = Flatten()(x)
+    x = Dense(256, activation='relu')(x)
+    x = Dropout(0.5)(x) 
+    output_layer = Dense(4, activation='softmax')(x)
     
-    # This is the only thing you will see in your terminal now!
+    model = Model(inputs=base_model.input, outputs=output_layer)
+
+    # 2. Pour the downloaded weights into the skeleton
+    model.load_weights(MODEL_PATH)
+    
     print("=====================================================")
-    print("✅ HealthLens ResNet50 Engine Active and Ready.")
+    print("✅ HealthLens VGG16 Engine Active and Ready.")
     print("📡 Server running cleanly on port 5000.")
     print("=====================================================")
 except Exception as e:
-    print(f"🚨 FATAL ERROR: Failed to load model. Ensure it is a valid .h5 file. Details: {e}")
+    print(f"🚨 FATAL ERROR: Failed to load weights. Details: {e}")
     exit()
-
-# ================= IMAGE SIZE =================
-IMG_SIZE = 160   
 
 # ================= STEP 2: THE GATEKEEPER (VALIDATION) =================
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -83,18 +93,19 @@ def predict():
              return jsonify({"error": "Corrupted or invalid image file. Could not read image data."}), 400
 
         img = preprocess(img)
-        pred = float(model.predict(img, verbose=0)[0][0]) # verbose=0 stops prediction progress bars
-        print(f"📊 RAW OUTPUT [{file.filename}]: {pred}")
+        
+        # Pass image to model and get array of 4 probabilities
+        raw_predictions = model.predict(img, verbose=0)[0] 
+        class_index = int(np.argmax(raw_predictions))
+        
+        # Map the exact classes from the author's model
+        class_names = ["COVID-19", "Normal", "Pneumonia", "Tuberculosis"]
+        label = class_names[class_index]
+        
+        # Calculate confidence percentage
+        conf = round(raw_predictions[class_index] * 100, 2)
 
-        if pred > 0.6:
-            label = "Normal"
-            conf = round(pred * 100, 2)
-        elif pred < 0.4:
-            label = "Tuberculosis"
-            conf = round((1 - pred) * 100, 2)
-        else:
-            label = "Uncertain"
-            conf = round(100 - abs(pred - 0.5) * 200, 2)
+        print(f"📊 RAW OUTPUT [{file.filename}]: {raw_predictions} -> {label}")
 
         return jsonify({
             "prediction": label,
