@@ -245,10 +245,20 @@
 
         .features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            padding: 80px 8%;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            padding: 60px 8%;
             background: var(--nav-bg);
+        }
+        @media (max-width: 480px) {
+            .features { padding: 40px 5%; gap: 16px; }
+            .f-card { padding: 28px 20px; }
+            .f-card h3 { font-size: 1.1rem; }
+            .hero-text h1 { font-size: 2rem; }
+            .hero-text p { font-size: 1rem; }
+            .hero { padding-top: 40px; }
+            .hero-img-container { height: 260px; }
+            .hero-img-container::before { width: 180px; height: 180px; }
         }
 
         .f-card {

@@ -179,6 +179,50 @@
             .document-card { border: none; box-shadow: none; padding: 0; max-width: 100%; }
             .document-card::before { display: none; }
         }
+
+        @media (max-width: 968px) {
+            body { overflow-y: auto !important; height: auto !important; flex-direction: column !important; }
+            .app-container { flex-direction: column; height: auto; }
+
+            .sidebar {
+                position: fixed !important; bottom: 0 !important; left: 0 !important;
+                width: 100% !important; height: 70px !important;
+                flex-direction: row !important; padding: 0 10px !important;
+                border-radius: 20px 20px 0 0 !important; justify-content: space-around !important;
+                align-items: center !important; z-index: 9999 !important;
+                background: var(--card-bg) !important; border-right: none !important;
+                border-top: 1px solid var(--border-color) !important;
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.08) !important;
+            }
+            .sidebar:hover { width: 100% !important; padding: 0 10px !important; border-radius: 20px 20px 0 0 !important; }
+
+            .nav-list { flex-direction: row !important; justify-content: space-around !important; align-items: center !important; width: 100% !important; }
+            .nav-item { flex-direction: column; gap: 4px; padding: 8px !important; margin: 0 !important; width: 55px !important; justify-content: center !important; background: transparent !important; color: var(--text-muted) !important; box-shadow: none !important; }
+            .nav-item i { font-size: 20px !important; }
+            .nav-text { display: block !important; font-size: 0.6rem !important; white-space: nowrap; opacity: 1 !important; }
+            .nav-item.active { color: var(--primary-color) !important; background: transparent !important; }
+            .nav-item[onclick*="logoutUser"] { display: none !important; }
+
+            .main-content { padding: 15px 15px 90px 15px !important; overflow-y: auto !important; height: auto !important; }
+
+            .top-header { flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+            .header-left h2 { font-size: 20px; }
+            .header-left p { font-size: 12px; }
+            .user-profile .user-info { display: none; }
+
+            .manager-layout { flex-direction: column !important; height: auto !important; gap: 15px; }
+            .archive-panel { width: 100% !important; max-height: 320px; }
+            .viewer-panel { padding-right: 0; padding-bottom: 20px; }
+            .viewer-actions { flex-wrap: wrap; gap: 10px; }
+            .viewer-actions .btn { flex: 1; justify-content: center; font-size: 12px; padding: 10px 12px; }
+
+            .document-card { padding: 25px 20px; }
+            .doc-header { flex-direction: column; gap: 10px; }
+            .doc-logo { width: 110px; }
+            .doc-meta { text-align: left; }
+            .patient-info-box { flex-direction: column; gap: 12px; }
+            .doc-title { font-size: 16px; }
+        }
     </style>
 </head>
 <body id="app-root">
