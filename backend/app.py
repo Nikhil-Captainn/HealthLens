@@ -11,7 +11,7 @@ from flask_cors import CORS
 import tensorflow as tf
 from tensorflow.keras.applications import VGG16
 from tensorflow.keras.layers import Flatten, Dense, Dropout
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, Sequential
 from PIL import Image, UnidentifiedImageError
 import numpy as np
 
@@ -33,15 +33,16 @@ if not os.path.exists(MODEL_PATH):
     exit()
 
 try:
-    # 1. Build the VGG16 Skeleton
+    # 1. Build the VGG16 Skeleton using the Sequential API
     base_model = VGG16(weights=None, include_top=False, input_shape=(IMG_SIZE, IMG_SIZE, 3))
-    x = base_model.output
-    x = Flatten()(x)
-    x = Dense(256, activation='relu')(x)
-    x = Dropout(0.5)(x) 
-    output_layer = Dense(4, activation='softmax')(x)
     
-    model = Model(inputs=base_model.input, outputs=output_layer)
+    model = Sequential()
+    model.add(base_model)
+    model.add(Flatten())
+    model.add(Dense(256, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(128, activation='relu')) # The hidden dense layer
+    model.add(Dense(4, activation='softmax'))
 
     # 2. Pour the downloaded weights into the skeleton
     model.load_weights(MODEL_PATH)
