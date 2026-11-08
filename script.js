@@ -76,7 +76,7 @@ function runAnalysis() {
     
     const apiUrl = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
         ? "http://127.0.0.1:5000/predict" 
-        : "https://healthlens-backend.onrender.com/predict";
+        : "https://healthlens-k6wz.onrender.com/predict";
 
     fetch(apiUrl, {
         method: "POST",
