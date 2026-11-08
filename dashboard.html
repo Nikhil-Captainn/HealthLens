@@ -902,7 +902,10 @@
         else greet.innerHTML = `Good Night, <span style="opacity:0.9;">${fName}</span>`; 
     }
 
-    const API_BASE = "http://127.0.0.1:5000";
+    // Automatically switch between Local Python and Live Render API
+    const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+        ? "http://127.0.0.1:5000" 
+        : "https://healthlens-backend.onrender.com";
 
     window.checkServer = function() {
         fetch(`${API_BASE}/`).then(() => { 

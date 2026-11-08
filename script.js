@@ -73,8 +73,12 @@ function runAnalysis() {
 
     const formData = new FormData();
     formData.append("image", input.files[0]);
+    
+    const apiUrl = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+        ? "http://127.0.0.1:5000/predict" 
+        : "https://healthlens-backend.onrender.com/predict";
 
-    fetch("http://127.0.0.1:5000/predict", {
+    fetch(apiUrl, {
         method: "POST",
         body: formData
     })
