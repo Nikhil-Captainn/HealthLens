@@ -22,7 +22,7 @@ log.setLevel(logging.ERROR)
 app = Flask(__name__)
 
 # ================= STEP 3: THE SHIELD (CORS SECURITY) =================
-CORS(app, resources={r"/predict": {"origins": "*"}})
+CORS(app)
 
 # ================= STEP 4: THE ENGINE OPTIMIZER =================
 MODEL_PATH = "model_FINAL_BEST.weights.h5"
@@ -72,6 +72,11 @@ def preprocess(img):
 
     img = np.expand_dims(img, axis=0)
     return img
+
+    # ================= SERVER HEALTH PING =================
+@app.route("/", methods=["GET"])
+def health_check():
+    return jsonify({"status": "Online", "engine": "VGG16 Active"}), 200
 
 # ================= PREDICTION API =================
 @app.route("/predict", methods=["POST"])
